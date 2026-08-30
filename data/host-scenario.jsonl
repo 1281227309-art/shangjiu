@@ -1,0 +1,5 @@
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"host-demo","version":"0.0.1"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_whisky","arguments":{"query":"东方"}}}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_products","arguments":{"distilleryId":"daqin"}}}
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"submit_tasting_note","arguments":{"distilleryId":"daqin","product":"双桶","score":90,"nose":"果香浓郁","palate":"波本甜感","finish":"悠长","taster":"上九-用户","source":"社群"}}}

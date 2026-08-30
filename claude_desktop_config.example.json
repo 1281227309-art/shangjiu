@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "shangjiu-guowei": {
+      "command": "node",
+      "args": ["<项目绝对路径>/src/index.ts"],
+      "env": {}
+    }
+  }
+}

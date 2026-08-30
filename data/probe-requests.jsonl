@@ -1,0 +1,6 @@
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"probe","version":"0.0.1"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_regions","arguments":{}}}
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_distillery","arguments":{"id":"daqin"}}}
+{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"submit_tasting_note","arguments":{"distilleryId":"daqin","product":"双桶","score":88,"nose":"果香花香","palate":"波本甜感圆润","finish":"悠长","taster":"probe","source":"mcp-probe"}}}

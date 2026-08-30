@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# 本地采集的品鉴笔记（数据漏斗，不进 npm 包，不提交）
+data/tasting-input.jsonl
+data/tasting-approved.json

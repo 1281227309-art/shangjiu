@@ -1,0 +1,28 @@
+{
+  "name": "shangjiu-guowei-knowledge-mcp",
+  "version": "0.2.0",
+  "description": "上九蒸馏所 · 国威知识库 MCP 服务器（薄插件 · 诚实数据 · 品鉴漏斗 · 复核闭环）",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.ts",
+    "start": "node src/index.ts",
+    "demo": "node scripts/demo.mjs",
+    "review": "node scripts/review.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "whisky",
+    "chinese-whisky",
+    "guowei",
+    "model-context-protocol"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.3"
+  }
+}
