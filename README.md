@@ -46,14 +46,14 @@
 
 ```bash
 cd 上九国威知识库-mcp
-npm install
+npm install          # 或 pnpm install（本项目含 pnpm-lock.yaml）
 
-npm start          # 启动 MCP 服务器（Node 原生直跑 src/index.ts）
-npm run dev        # --watch 开发模式
+npm start            # 启动 MCP 服务器（Node 原生直跑 src/index.ts）
+npm run dev          # --watch 开发模式
 
 # 免 npm 也能直接用（纯业务层，不依赖 MCP SDK）：
-npm run demo       # 演示全部工具输出（含品鉴漏斗落盘）
-npm run review     # 品鉴数据复核管线
+npm run demo         # 演示全部工具输出（含品鉴漏斗落盘）
+npm run review       # 品鉴数据复核管线
 ```
 
 服务器走 **stdio**，启动后无界面，等 MCP 宿主调用。日志输出到 stderr，不污染协议通道。
