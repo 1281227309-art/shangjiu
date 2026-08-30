@@ -4,7 +4,7 @@
 
 > **让世界喝懂中国威士忌的开源 AI 插件**
 
-**国威品鉴 · 选酒导购 · 产区图谱 · 内容生成 ｜ 首个面向国产威士忌的 MCP 工具**
+**国威品鉴 · 选酒导购 · 产区图谱 · 内容生成 ｜ 面向国产威士忌的 MCP 工具**
 
 <p align="center">
   <a href="https://github.com/shangjiu-distillery/shangjiu">⭐ GitHub</a> ·
