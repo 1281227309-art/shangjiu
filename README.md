@@ -182,6 +182,8 @@ cat data/host-scenario.jsonl | node src/index.ts
 
 ## 贡献 (Contributing)
 
+> **完整发布指南见 [`CONTRIBUTING.md`](./CONTRIBUTING.md)**（含改哪个文件、走哪条管线、具体命令与数据规范）。
+
 欢迎一切形式的共建：
 
 | 贡献类型 | 怎么做 |
@@ -205,6 +207,7 @@ cat data/host-scenario.jsonl | node src/index.ts
 ├── .gitignore
 ├── LICENSE
 ├── README.md
+├── CONTRIBUTING.md               # 贡献者发布指南（具体路径/命令/规范）
 ├── run-mcp.sh                      # 一键启动脚本（规避命令路径问题）
 ├── claude_desktop_config.example.json
 ├── src/
