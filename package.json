@@ -11,11 +11,17 @@
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
-    "mcp",
-    "whisky",
+    "ai-plugin",
     "chinese-whisky",
+    "data-funnel",
     "guowei",
-    "model-context-protocol"
+    "knowledge-base",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "open-source",
+    "whisky",
+    "whisky-knowledge"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
@@ -24,5 +30,26 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.6.3"
+  },
+  "files": [
+    "src",
+    "scripts/demo.mjs",
+    "scripts/review.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "shangjiu-guowei-mcp": "src/index.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1281227309-art/shangjiu.git"
+  },
+  "homepage": "https://1281227309-art.github.io/shangjiu/",
+  "bugs": {
+    "url": "https://github.com/1281227309-art/shangjiu/issues"
   }
 }
