@@ -7,10 +7,19 @@
 **国威品鉴 · 选酒导购 · 产区图谱 · 内容生成 ｜ 面向国产威士忌的 MCP 工具**
 
 <p align="center">
+  <img alt="GitHub stars" src="https://img.shields.io/github/stars/1281227309-art/shangjiu?style=flat-square&logo=github" />
+  <img alt="GitHub forks" src="https://img.shields.io/github/forks/1281227309-art/shangjiu?style=flat-square&logo=github" />
+  <img alt="License" src="https://img.shields.io/github/license/1281227309-art/shangjiu?style=flat-square" />
+  <img alt="npm version" src="https://img.shields.io/npm/v/shangjiu-guowei-knowledge-mcp?style=flat-square&logo=npm" />
+  <img alt="GitHub Pages" src="https://img.shields.io/badge/live-在线-2ea44f?style=flat-square" />
+</p>
+
+<p align="center">
   <a href="https://github.com/1281227309-art/shangjiu">⭐ GitHub</a> ·
   <a href="https://github.com/1281227309-art/shangjiu#readme">README</a> ·
   <a href="./LICENSE">License</a> ·
-  <a href="https://github.com/1281227309-art/shangjiu/fork">Fork</a>
+  <a href="https://github.com/1281227309-art/shangjiu/fork">Fork</a> ·
+  <a href="https://1281227309-art.github.io/shangjiu/">🌏 在线落地页</a>
 </p>
 
 ---
