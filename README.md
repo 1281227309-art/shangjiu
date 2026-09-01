@@ -14,6 +14,30 @@
   <img alt="GitHub Pages" src="https://img.shields.io/badge/live-在线-2ea44f?style=flat-square" />
 </p>
 
+## 🌏 在线体验
+
+> **<https://1281227309-art.github.io/shangjiu/>** —— 一眼看懂「上九 · 国威知识库」是什么、能做什么，以及如何接入你的 AI 宿主。
+
+<!-- Glama 元数据：以下信息供自动化索引（mcp / knowledge-base / license / homepage / code） -->
+<table>
+  <tr>
+    <td><b>类型</b></td>
+    <td>MCP Server（stdio · Node.js）</td>
+    <td><b>License</b></td>
+    <td>MIT</td>
+  </tr>
+  <tr>
+    <td><b>领域</b></td>
+    <td>中国威士忌 · 知识库</td>
+    <td><b>落地页</b></td>
+    <td><a href="https://1281227309-art.github.io/shangjiu/">1281227309-art.github.io/shangjiu</a></td>
+  </tr>
+  <tr>
+    <td><b>关键词</b></td>
+    <td colspan="3">`mcp` · `chinese-whisky` · `knowledge-base` · `data-funnel` · `选酒导购` · `品鉴`</td>
+  </tr>
+</table>
+
 <p align="center">
   <a href="https://github.com/1281227309-art/shangjiu">⭐ GitHub</a> ·
   <a href="https://github.com/1281227309-art/shangjiu#readme">README</a> ·
