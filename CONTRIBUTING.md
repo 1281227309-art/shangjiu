@@ -52,7 +52,7 @@
 
 ```bash
 # 1. Fork → 克隆 → 建分支
-git clone https://github.com/shangjiu-distillery/shangjiu.git
+git clone https://github.com/1281227309-art/shangjiu.git
 cd shangjiu
 git checkout -b feat/your-change
 

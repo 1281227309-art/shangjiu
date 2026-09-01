@@ -7,10 +7,10 @@
 **国威品鉴 · 选酒导购 · 产区图谱 · 内容生成 ｜ 面向国产威士忌的 MCP 工具**
 
 <p align="center">
-  <a href="https://github.com/shangjiu-distillery/shangjiu">⭐ GitHub</a> ·
-  <a href="https://github.com/shangjiu-distillery/shangjiu#readme">README</a> ·
+  <a href="https://github.com/1281227309-art/shangjiu">⭐ GitHub</a> ·
+  <a href="https://github.com/1281227309-art/shangjiu#readme">README</a> ·
   <a href="./LICENSE">License</a> ·
-  <a href="https://github.com/shangjiu-distillery/shangjiu/fork">Fork</a>
+  <a href="https://github.com/1281227309-art/shangjiu/fork">Fork</a>
 </p>
 
 ---
