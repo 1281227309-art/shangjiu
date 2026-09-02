@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国威士忌版图 · 上九国威知识库</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #faf8f5; color: #3a3226; }
+  .header { padding: 22px 32px 10px; }
+  .header h1 { font-size: 22px; color: #6d4c1f; letter-spacing: 1px; }
+  .header h1 span { color: #c4a35a; }
+  .header .sub { font-size: 12.5px; color: #8a7f6a; margin-top: 6px; }
+  .wrap { display: flex; height: calc(100vh - 96px); }
+  #chart { flex: 1; height: 100%; }
+  .sidebar { width: 300px; overflow-y: auto; padding: 12px 18px 24px; border-left: 1px solid #e8e2d5; }
+  .sidebar h2 { font-size: 14px; color: #6d4c1f; margin: 14px 0 8px; }
+  .region-group { margin-bottom: 10px; }
+  .region-name { font-size: 12px; color: #8a7f6a; padding: 4px 0; border-bottom: 1px dashed #e0d8c8; }
+  .distillery-item { padding: 7px 4px; font-size: 13px; cursor: pointer; border-radius: 6px; transition: background .15s; }
+  .distillery-item:hover { background: #f1ead9; }
+  .distillery-item .nm { font-weight: 600; color: #3a3226; }
+  .distillery-item .meta { font-size: 11px; color: #8a7f6a; margin-top: 2px; }
+  .badge-verified { display: inline-block; font-size: 10px; color: #fff; background: #c4a35a; border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
+  .badge-pending { display: inline-block; font-size: 10px; color: #fff; background: #a8b0a0; border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
+  .footer-note { font-size: 11px; color: #a09680; line-height: 1.7; padding: 10px 32px 18px; border-top: 1px solid #e8e2d5; }
+  .map-note { padding: 40px; color: #8a7f6a; font-size: 13px; text-align: center; }
+</style>
+<script src="assets/vendor/echarts.min.js"></script>
+</head>
+<body>
+<div class="header">
+  <h1>中国威士忌版图 <span>｜ 上九国威知识库</span></h1>
+  <div class="sub">13 家国产威士忌酒厂 · 9 大产区萌芽体系（其中 8 家已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
+</div>
+<div class="wrap">
+  <div id="chart"><div class="map-note">地图加载中…</div></div>
+  <div class="sidebar" id="sidebar"></div>
+</div>
+<div class="footer-note">
+  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位）。
+  滚轮缩放地图，点击标注点查看酒厂详情，点击右侧列表可定位到酒厂。知识库数据遵循诚实守则：不编造品鉴笔记与价格，凡无一手来源一律标注待核。
+</div>
+<script>
+var verified = [
+  { name: "崃州 · 四川邛崃 · 百润股份", value: [103.514919, 30.391510, 60], id: "laizhou" },
+  { name: "叠川 · 四川峨眉山 · 保乐力加", value: [103.428854, 29.498612, 55], id: "diechuan" },
+  { name: "云拓 · 云南洱源 · 帝亚吉欧", value: [99.940795, 25.997066, 55], id: "yuntuo" },
+  { name: "大芹 · 福建平和 · 独立", value: [117.107194, 24.191707, 45], id: "daqin" }
+];
+var pending = [
+  { name: "凌酝 · 云南巍山 · 独立", value: [100.236310, 25.389369, 35], id: "lingyun" },
+  { name: "伦布卡 · 云南南涧无量山 · 独立", value: [100.386535, 24.854413, 30], id: "lunbuka" },
+  { name: "云之所 · 云南（省级参考定位） · 独立", value: [102.709372, 25.046432, 30], id: "yunsuozhi" },
+  { name: "觀橡 · 广东广州从化 · 顺昌源", value: [113.540779, 23.565349, 35], id: "guanxiang" },
+  { name: "太瓏釀 · 广东兴宁 · 珍珠红", value: [115.731133, 24.137296, 30], id: "tailongniang" },
+  { name: "吉斯波尔 · 山东烟台牟平 · 吉斯集团", value: [121.608657, 37.377445, 35], id: "jisiboer" },
+  { name: "钰之锦 · 山东蓬莱 · 独立", value: [120.857939, 37.776223, 30], id: "yuzhijin" },
+  { name: "古奇 · 安徽亳州 · 古井贡×卡慕", value: [115.683257, 33.991547, 35], id: "guqi" },
+  { name: "阿拉嘉宝 · 西藏拉萨 · 独立", value: [91.156635, 29.656707, 30], id: "alajiaobao" }
+];
+var chartEl = document.getElementById("chart");
+
+if (typeof echarts === "undefined") {
+  chartEl.innerHTML = '<div class="map-note">图表组件加载失败（assets/vendor/echarts.min.js 缺失）。右侧酒厂索引仍可使用。</div>';
+} else {
+  var chart = echarts.init(chartEl);
+  fetch("assets/vendor/china.json")
+    .then(function(r) { return r.json(); })
+    .then(function(geoJson) {
+      echarts.registerMap("china", geoJson);
+      chart.setOption({
+        tooltip: { trigger: "item", formatter: "{b}" },
+        visualMap: { show: false },
+        geo: {
+          map: "china", roam: true, zoom: 1.2,
+          itemStyle: { areaColor: "#f3ecdd", borderColor: "#d8cfba", borderWidth: 0.8 },
+          emphasis: { itemStyle: { areaColor: "#ece1c8" }, label: { show: false } },
+          select: { itemStyle: { areaColor: "#ece1c8" }, label: { show: false } }
+        },
+        series: [
+          {
+            name: "已核实酒厂", type: "effectScatter", coordinateSystem: "geo",
+            data: verified, symbolSize: 14, rippleEffect: { scale: 3.2, brushType: "stroke" },
+            itemStyle: { color: "#c4a35a", shadowBlur: 8, shadowColor: "rgba(196,163,90,0.5)" },
+            label: { show: true, formatter: function(p) { return p.name.split(" · ")[0]; }, position: "right", color: "#6d4c1f", fontWeight: 600, fontSize: 12 },
+            zlevel: 2
+          },
+          {
+            name: "待厂方确认酒厂", type: "scatter", coordinateSystem: "geo",
+            data: pending, symbolSize: 11, symbol: "diamond",
+            itemStyle: { color: "#a8b0a0", borderColor: "#8b917f", borderWidth: 1 },
+            label: { show: true, formatter: function(p) { return p.name.split(" · ")[0]; }, position: "right", color: "#7a8070", fontSize: 11 },
+            zlevel: 2
+          }
+        ]
+      });
+    })
+    .catch(function() {
+      chartEl.innerHTML = '<div class="map-note">地图数据加载失败（assets/vendor/china.json 缺失）。右侧酒厂索引仍可使用。</div>';
+    });
+
+  window.addEventListener("resize", function() { chart.resize(); });
+
+  var distilleries = {
+    laizhou: { nm: "崃州", meta: "四川邛崃 · 百润股份 · 主流口粮档（约六成市占，100-400元）", verified: true, region: "邛崃产区" },
+    diechuan: { nm: "叠川", meta: "四川峨眉山 · 保乐力加 · 高端生态产区（888元锚点）", verified: true, region: "峨眉山产区" },
+    yuntuo: { nm: "云拓", meta: "云南洱源凤羽 · 帝亚吉欧 · 高端高海拔（2026 Icons of Whisky China 获奖）", verified: true, region: "大理产区" },
+    daqin: { nm: "大芹", meta: "产地在福建平和，按「大湾区新势力」归类 · 独立 · 单一麦芽东方风味", verified: true, region: "广东产区带" },
+    lingyun: { nm: "凌酝", meta: "云南巍山 · 独立 · 单一麦芽 · 本土木种试验", verified: false, region: "滇西横断山带" },
+    lunbuka: { nm: "伦布卡（无量川）", meta: "云南南涧无量山 · 独立 · 茶威士忌路线", verified: false, region: "滇西横断山带" },
+    yunsuozhi: { nm: "云之所", meta: "云南 · 独立 · 单一麦芽 · 本地酒桶", verified: false, region: "滇西横断山带" },
+    guanxiang: { nm: "觀橡（顺昌源）", meta: "广东广州从化 · 顺昌源 · 100% 中国橡木桶", verified: false, region: "广东产区带" },
+    tailongniang: { nm: "太瓏釀（珍珠红）", meta: "广东梅州兴宁 · 珍珠红老字号 · 米酿基因东方工艺", verified: false, region: "广东产区带" },
+    jisiboer: { nm: "吉斯波尔", meta: "山东烟台牟平 · 吉斯集团 · 单一麦芽东方香型体系", verified: false, region: "胶东半岛产区" },
+    yuzhijin: { nm: "钰之锦", meta: "山东蓬莱 · 独立 · 单一麦芽 · 风味桶实验", verified: false, region: "胶东半岛产区" },
+    guqi: { nm: "古奇（古井贡×卡慕）", meta: "安徽亳州 · 合资 · 草本威士忌路线", verified: false, region: "亳州产区" },
+    alajiaobao: { nm: "阿拉嘉宝/香格里拉", meta: "西藏拉萨 · 独立 · 青稞威士忌 · 极端高海拔风土", verified: false, region: "青藏高原产区" }
+  };
+  var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区"];
+  var sb = document.getElementById("sidebar");
+  sb.innerHTML = "<h2>产区 · 酒厂索引</h2>" + regions.map(function(rg) {
+    var items = Object.keys(distilleries).filter(function(k) { return distilleries[k].region === rg; });
+    return '<div class="region-group"><div class="region-name">' + rg + "</div>" + items.map(function(k) {
+      var d = distilleries[k];
+      var badge = d.verified ? '<span class="badge-verified">已核实</span>' : '<span class="badge-pending">待确认</span>';
+      return '<div class="distillery-item" data-id="' + k + '"><span class="nm">' + d.nm + "</span>" + badge + '<div class="meta">' + d.meta + "</div></div>";
+    }).join("") + "</div>";
+  }).join("");
+  document.querySelectorAll(".distillery-item").forEach(function(el) {
+    el.addEventListener("click", function() {
+      var id = el.getAttribute("data-id");
+      var pt = verified.concat(pending).filter(function(p) { return p.id === id; })[0];
+      if (pt) {
+        chart.setOption({ geo: { center: [pt.value[0], pt.value[1]], zoom: 5 } });
+      }
+    });
+  });
+}
+</script>
+</body>
+</html>

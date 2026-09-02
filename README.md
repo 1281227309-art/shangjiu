@@ -43,7 +43,8 @@
   <a href="https://github.com/1281227309-art/shangjiu#readme">README</a> ·
   <a href="./LICENSE">License</a> ·
   <a href="https://github.com/1281227309-art/shangjiu/fork">Fork</a> ·
-  <a href="https://1281227309-art.github.io/shangjiu/">🌏 在线落地页</a>
+  <a href="https://1281227309-art.github.io/shangjiu/">🌏 在线落地页</a> ·
+  <a href="./china_whisky_map.html">🗺️ 产区图谱</a>
 </p>
 
 ---
