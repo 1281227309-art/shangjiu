@@ -21,6 +21,7 @@
   .distillery-item:hover { background: #f1ead9; }
   .distillery-item .nm { font-weight: 600; color: #3a3226; }
   .distillery-item .meta { font-size: 11px; color: #8a7f6a; margin-top: 2px; }
+  .region-ref .distillery-item { color: #7f9096; }
   .badge-verified { display: inline-block; font-size: 10px; color: #fff; background: #c4a35a; border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
   .badge-pending { display: inline-block; font-size: 10px; color: #fff; background: #a8b0a0; border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
   .footer-note { font-size: 11px; color: #a09680; line-height: 1.7; padding: 10px 32px 18px; border-top: 1px solid #e8e2d5; }
@@ -31,14 +32,14 @@
 <body>
 <div class="header">
   <h1>中国威士忌版图 <span>｜ 上九国威知识库</span></h1>
-  <div class="sub">13 家国产威士忌酒厂 · 9 大产区萌芽体系（其中 8 家已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
+  <div class="sub">13 家国产威士忌酒厂 · 9 大产区萌芽体系（其中 8 家已有酒厂标注，千岛湖为立项产区）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
 </div>
 <div class="wrap">
   <div id="chart"><div class="map-note">地图加载中…</div></div>
   <div class="sidebar" id="sidebar"></div>
 </div>
 <div class="footer-note">
-  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位）。
+  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位）。千岛湖产区为水源型立项产区（行业团体标准立项地，暂无酒厂标注）。
   滚轮缩放地图，点击标注点查看酒厂详情，点击右侧列表可定位到酒厂。知识库数据遵循诚实守则：不编造品鉴笔记与价格，凡无一手来源一律标注待核。
 </div>
 <script>
@@ -59,6 +60,10 @@ var pending = [
   { name: "古奇 · 安徽亳州 · 古井贡×卡慕", value: [115.683257, 33.991547, 35], id: "guqi" },
   { name: "阿拉嘉宝 · 西藏拉萨 · 独立", value: [91.156635, 29.656707, 30], id: "alajiaobao" }
 ];
+var regionMarks = [
+  { name: "千岛湖产区", value: [119.02, 29.61], id: "qiandaohu", note: "水源型产区 · 行业团体标准立项地 · 暂无酒厂标注" }
+];
+var allMarks = verified.concat(pending).concat(regionMarks);
 var chartEl = document.getElementById("chart");
 
 if (typeof echarts === "undefined") {
@@ -92,6 +97,13 @@ if (typeof echarts === "undefined") {
             itemStyle: { color: "#a8b0a0", borderColor: "#8b917f", borderWidth: 1 },
             label: { show: true, formatter: function(p) { return p.name.split(" · ")[0]; }, position: "right", color: "#7a8070", fontSize: 11 },
             zlevel: 2
+          },
+          {
+            name: "产区参考", type: "scatter", coordinateSystem: "geo",
+            data: regionMarks, symbolSize: 12, symbol: "circle",
+            itemStyle: { color: "rgba(122,150,160,0.55)", borderColor: "#7fa3ab", borderWidth: 1.5 },
+            label: { show: true, formatter: function(p) { return p.name; }, position: "bottom", color: "#6a7c82", fontSize: 11 },
+            zlevel: 1
           }
         ]
       });
@@ -117,20 +129,25 @@ if (typeof echarts === "undefined") {
     guqi: { nm: "古奇（古井贡×卡慕）", meta: "安徽亳州 · 合资 · 草本威士忌路线", verified: false, region: "亳州产区" },
     alajiaobao: { nm: "阿拉嘉宝/香格里拉", meta: "西藏拉萨 · 独立 · 青稞威士忌 · 极端高海拔风土", verified: false, region: "青藏高原产区" }
   };
-  var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区"];
+  var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "千岛湖产区"];
   var sb = document.getElementById("sidebar");
   sb.innerHTML = "<h2>产区 · 酒厂索引</h2>" + regions.map(function(rg) {
     var items = Object.keys(distilleries).filter(function(k) { return distilleries[k].region === rg; });
+    if (items.length === 0) {
+      var rm = regionMarks.filter(function(m) { return m.name === rg; })[0];
+      var note = rm ? rm.note : "产区立项中 · 暂无酒厂标注";
+      return '<div class="region-group region-ref"><div class="region-name">' + rg + '</div><div class="distillery-item" data-id="' + (rm ? rm.id : "") + '"><span class="meta">' + note + '</span></div></div>';
+    }
     return '<div class="region-group"><div class="region-name">' + rg + "</div>" + items.map(function(k) {
       var d = distilleries[k];
       var badge = d.verified ? '<span class="badge-verified">已核实</span>' : '<span class="badge-pending">待确认</span>';
       return '<div class="distillery-item" data-id="' + k + '"><span class="nm">' + d.nm + "</span>" + badge + '<div class="meta">' + d.meta + "</div></div>";
     }).join("") + "</div>";
   }).join("");
-  document.querySelectorAll(".distillery-item").forEach(function(el) {
+  document.querySelectorAll(".distillery-item[data-id]").forEach(function(el) {
     el.addEventListener("click", function() {
       var id = el.getAttribute("data-id");
-      var pt = verified.concat(pending).filter(function(p) { return p.id === id; })[0];
+      var pt = allMarks.filter(function(p) { return p.id === id; })[0];
       if (pt) {
         chart.setOption({ geo: { center: [pt.value[0], pt.value[1]], zoom: 5 } });
       }
