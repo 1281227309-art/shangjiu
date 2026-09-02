@@ -13,19 +13,22 @@
   .header .sub { font-size: 12.5px; color: #8a7f6a; margin-top: 6px; }
   .wrap { display: flex; height: calc(100vh - 96px); }
   #chart { flex: 1; height: 100%; }
-  .sidebar { width: 300px; overflow-y: auto; padding: 12px 18px 24px; border-left: 1px solid #e8e2d5; }
+  .sidebar { width: 320px; overflow-y: auto; padding: 12px 18px 24px; border-left: 1px solid #e8e2d5; }
   .sidebar h2 { font-size: 14px; color: #6d4c1f; margin: 14px 0 8px; }
   .region-group { margin-bottom: 10px; }
   .region-name { font-size: 12px; color: #8a7f6a; padding: 4px 0; border-bottom: 1px dashed #e0d8c8; }
-  .distillery-item { padding: 7px 4px; font-size: 13px; cursor: pointer; border-radius: 6px; transition: background .15s; }
+  .distillery-item { padding: 8px 4px; font-size: 13px; cursor: pointer; border-radius: 6px; transition: background .15s; }
   .distillery-item:hover { background: #f1ead9; }
   .distillery-item .nm { font-weight: 600; color: #3a3226; }
-  .distillery-item .meta { font-size: 11px; color: #8a7f6a; margin-top: 2px; }
+  .distillery-item .meta { font-size: 11.5px; color: #8a7f6a; margin-top: 2px; }
+  .distillery-item .flavor { font-size: 11px; color: #7c8a80; margin-top: 2px; line-height: 1.5; }
+  .distillery-item .flavor b { color: #6a4a1f; font-weight: 600; }
   .region-ref .distillery-item { color: #7f9096; }
   .badge-verified { display: inline-block; font-size: 10px; color: #fff; background: #c4a35a; border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
   .badge-pending { display: inline-block; font-size: 10px; color: #fff; background: #a8b0a0; border-radius: 3px; padding: 1px 5px; margin-left: 5px; }
   .footer-note { font-size: 11px; color: #a09680; line-height: 1.7; padding: 10px 32px 18px; border-top: 1px solid #e8e2d5; }
   .map-note { padding: 40px; color: #8a7f6a; font-size: 13px; text-align: center; }
+  .tooltip { font-size: 12px; line-height: 1.6; }
 </style>
 <script src="assets/vendor/echarts.min.js"></script>
 </head>
@@ -39,8 +42,8 @@
   <div class="sidebar" id="sidebar"></div>
 </div>
 <div class="footer-note">
-  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位）。千岛湖产区为水源型立项产区（行业团体标准立项地，暂无酒厂标注）。
-  滚轮缩放地图，点击标注点查看酒厂详情，点击右侧列表可定位到酒厂。知识库数据遵循诚实守则：不编造品鉴笔记与价格，凡无一手来源一律标注待核。
+  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位；桶型/风味为主导向，待核）。千岛湖产区为水源型立项产区（行业团体标准立项地，暂无酒厂标注）。
+  滚轮缩放地图，悬停/点击查看酒厂方向与桶型风味，点击右侧列表可定位到酒厂。知识库数据遵循诚实守则：不编造品鉴笔记与价格，凡无一手来源一律标注待核。
 </div>
 <script>
 var verified = [
@@ -63,8 +66,31 @@ var pending = [
 var regionMarks = [
   { name: "千岛湖产区", value: [119.02, 29.61], id: "qiandaohu", note: "水源型产区 · 行业团体标准立项地 · 暂无酒厂标注" }
 ];
+
+/* 每家：方向 / 桶型 / 风味（待确认的风味带「待核」） */
+var distilleries = {
+  laizhou: { nm: "崃州", direction: "主流 · 口粮档（约六成市占，100-400元）", cask: "多桶型体系", flavor: "麦芽 / 果香", verified: true, region: "邛崃产区", meta: "四川邛崃 · 百润股份" },
+  diechuan: { nm: "叠川", direction: "高端 · 生态产区（888元锚点）", cask: "待核", flavor: "高端 / 精细", verified: true, region: "峨眉山产区", meta: "四川峨眉山 · 保乐力加" },
+  yuntuo: { nm: "云拓", direction: "高端 · 高海拔（2026 Icons 获奖）", cask: "待核", flavor: "高海拔 / 风土", verified: true, region: "大理产区", meta: "云南洱源凤羽 · 帝亚吉欧" },
+  daqin: { nm: "大芹", direction: "单一麦芽 · 东方风味", cask: "波本桶为主 · 含双桶", flavor: "东方果香 / 波本甜感", verified: true, region: "广东产区带", meta: "福建平和（按大湾区归类）· 独立" },
+  lingyun: { nm: "凌酝", direction: "单一麦芽 · 本土木种试验", cask: "云南麻栎 / 滇合欢木桶", flavor: "本土木种风味（待核）", verified: false, region: "滇西横断山带", meta: "云南巍山 · 独立" },
+  lunbuka: { nm: "伦布卡（无量川）", direction: "茶威士忌路线", cask: "高山白茶润桶 · 以茶代糖", flavor: "白茶 / 茶韵（待核）", verified: false, region: "滇西横断山带", meta: "云南南涧无量山 · 独立" },
+  yunsuozhi: { nm: "云之所", direction: "单一麦芽 · 本地酒桶", cask: "云南葡萄酒桶", flavor: "葡萄酒桶果香（待核）", verified: false, region: "滇西横断山带", meta: "云南 · 独立" },
+  guanxiang: { nm: "觀橡（顺昌源）", direction: "100% 中国橡木桶", cask: "蒙古栎（中国橡木）· 荔枝/金桔润桶", flavor: "中国橡木 / 岭南果香（待核）", verified: false, region: "广东产区带", meta: "广东广州从化 · 顺昌源" },
+  tailongniang: { nm: "太瓏釀（珍珠红）", direction: "米酿基因 · 东方工艺", cask: "陶缸老熟 + 黄酒桶后熟", flavor: "米酿甜感 / 黄酒韵（待核）", verified: false, region: "广东产区带", meta: "广东梅州兴宁 · 珍珠红" },
+  jisiboer: { nm: "吉斯波尔", direction: "东方香型体系", cask: "蒙古栎「雕堡桶」", flavor: "沉香 / 茶韵（待核）", verified: false, region: "胶东半岛产区", meta: "山东烟台牟平 · 吉斯集团" },
+  yuzhijin: { nm: "钰之锦", direction: "风味桶实验", cask: "茶桶 / 树莓桶 / 霞多丽桶", flavor: "茶 / 树莓果香（待核）", verified: false, region: "胶东半岛产区", meta: "山东蓬莱 · 独立" },
+  guqi: { nm: "古奇（古井贡×卡慕）", direction: "草本威士忌", cask: "待核", flavor: "草本 / 药香（待核）", verified: false, region: "亳州产区", meta: "安徽亳州 · 古井贡×卡慕" },
+  alajiaobao: { nm: "阿拉嘉宝/香格里拉", direction: "青稞威士忌 · 极端风土", cask: "待核", flavor: "青稞谷物感（待核）", verified: false, region: "青藏高原产区", meta: "西藏拉萨 · 独立" }
+};
+var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "千岛湖产区"];
 var allMarks = verified.concat(pending).concat(regionMarks);
 var chartEl = document.getElementById("chart");
+
+function tooltipHtml(d) {
+  if (!d) return "";
+  return '<div class="tooltip"><b>' + d.nm + "</b><br/>方向：" + d.direction + "<br/>桶型：" + d.cask + "<br/>风味：" + d.flavor + "</div>";
+}
 
 if (typeof echarts === "undefined") {
   chartEl.innerHTML = '<div class="map-note">图表组件加载失败（assets/vendor/echarts.min.js 缺失）。右侧酒厂索引仍可使用。</div>';
@@ -75,7 +101,7 @@ if (typeof echarts === "undefined") {
     .then(function(geoJson) {
       echarts.registerMap("china", geoJson);
       chart.setOption({
-        tooltip: { trigger: "item", formatter: "{b}" },
+        tooltip: { trigger: "item", formatter: function(p) { return tooltipHtml(distilleries[p.data.id]) || p.name; } },
         visualMap: { show: false },
         geo: {
           map: "china", roam: true, zoom: 1.2,
@@ -114,22 +140,6 @@ if (typeof echarts === "undefined") {
 
   window.addEventListener("resize", function() { chart.resize(); });
 
-  var distilleries = {
-    laizhou: { nm: "崃州", meta: "四川邛崃 · 百润股份 · 主流口粮档（约六成市占，100-400元）", verified: true, region: "邛崃产区" },
-    diechuan: { nm: "叠川", meta: "四川峨眉山 · 保乐力加 · 高端生态产区（888元锚点）", verified: true, region: "峨眉山产区" },
-    yuntuo: { nm: "云拓", meta: "云南洱源凤羽 · 帝亚吉欧 · 高端高海拔（2026 Icons of Whisky China 获奖）", verified: true, region: "大理产区" },
-    daqin: { nm: "大芹", meta: "产地在福建平和，按「大湾区新势力」归类 · 独立 · 单一麦芽东方风味", verified: true, region: "广东产区带" },
-    lingyun: { nm: "凌酝", meta: "云南巍山 · 独立 · 单一麦芽 · 本土木种试验", verified: false, region: "滇西横断山带" },
-    lunbuka: { nm: "伦布卡（无量川）", meta: "云南南涧无量山 · 独立 · 茶威士忌路线", verified: false, region: "滇西横断山带" },
-    yunsuozhi: { nm: "云之所", meta: "云南 · 独立 · 单一麦芽 · 本地酒桶", verified: false, region: "滇西横断山带" },
-    guanxiang: { nm: "觀橡（顺昌源）", meta: "广东广州从化 · 顺昌源 · 100% 中国橡木桶", verified: false, region: "广东产区带" },
-    tailongniang: { nm: "太瓏釀（珍珠红）", meta: "广东梅州兴宁 · 珍珠红老字号 · 米酿基因东方工艺", verified: false, region: "广东产区带" },
-    jisiboer: { nm: "吉斯波尔", meta: "山东烟台牟平 · 吉斯集团 · 单一麦芽东方香型体系", verified: false, region: "胶东半岛产区" },
-    yuzhijin: { nm: "钰之锦", meta: "山东蓬莱 · 独立 · 单一麦芽 · 风味桶实验", verified: false, region: "胶东半岛产区" },
-    guqi: { nm: "古奇（古井贡×卡慕）", meta: "安徽亳州 · 合资 · 草本威士忌路线", verified: false, region: "亳州产区" },
-    alajiaobao: { nm: "阿拉嘉宝/香格里拉", meta: "西藏拉萨 · 独立 · 青稞威士忌 · 极端高海拔风土", verified: false, region: "青藏高原产区" }
-  };
-  var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "千岛湖产区"];
   var sb = document.getElementById("sidebar");
   sb.innerHTML = "<h2>产区 · 酒厂索引</h2>" + regions.map(function(rg) {
     var items = Object.keys(distilleries).filter(function(k) { return distilleries[k].region === rg; });
@@ -141,7 +151,9 @@ if (typeof echarts === "undefined") {
     return '<div class="region-group"><div class="region-name">' + rg + "</div>" + items.map(function(k) {
       var d = distilleries[k];
       var badge = d.verified ? '<span class="badge-verified">已核实</span>' : '<span class="badge-pending">待确认</span>';
-      return '<div class="distillery-item" data-id="' + k + '"><span class="nm">' + d.nm + "</span>" + badge + '<div class="meta">' + d.meta + "</div></div>";
+      return '<div class="distillery-item" data-id="' + k + '"><span class="nm">' + d.nm + "</span>" + badge +
+        '<div class="meta">' + d.meta + "</div>" +
+        '<div class="flavor"><b>方向</b> ' + d.direction + ' ｜ <b>桶</b> ' + d.cask + ' ｜ <b>风味</b> ' + d.flavor + "</div></div>";
     }).join("") + "</div>";
   }).join("");
   document.querySelectorAll(".distillery-item[data-id]").forEach(function(el) {
