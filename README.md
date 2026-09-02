@@ -1,6 +1,8 @@
 <p align="center"><img src="assets/logo.jpg" width="120" alt="上九 · Shangjiu" /></p>
 
-# 上九 · Shangjiu ｜ 国威知识库 MCP
+# 上九国威知识库 MCP
+
+**Shangjiu Chinese Whisky Knowledge Base MCP**
 
 > **让世界喝懂中国威士忌的开源 AI 插件**
 
