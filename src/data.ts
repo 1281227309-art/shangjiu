@@ -113,10 +113,16 @@ export const DISTILLERIES: Distillery[] = [
     story: "国产威士忌绝对主力，大桶容 + 高市占（约六成），主打 100-400 元口粮档。",
     source: "行业盘点（CWS / 兴业证券）",
     confidence: "verified",
-    process: { cask: "多桶型体系", maturation: "对标国际单一麦芽≥3年" },
-    flavor: { dominant: ["麦芽 / 果香（行业共识，待聚合）"] },
+    process: { cask: "多桶型体系（含中国加强酒桶 / STR红酒桶 / 波本）", maturation: "中国法律规定威士忌须≥3年陈酿" },
+    flavor: {
+      dominant: ["红苹果-乌龙茶（待聚合）", "李-香草-木烟（待聚合）", "蜂蜜-杏（待聚合）"],
+      community: "Whisky Scribe — https://thewhiskyscribe.com/laizhou-distillery-chinese-single-malt-whisky/",
+    },
     products: [
       { name: "崃州系列", cask: "多桶", tier: "口粮-中端", priceBand: "100–400 元", confidence: "verified" },
+      { name: "Finest Select", cask: "多桶·中国加强酒桶", tier: "口粮", confidence: "pending" },
+      { name: "STR Red Wine Cask", cask: "STR红酒·泥煤", tier: "中端", confidence: "pending" },
+      { name: "Bourbon Cask", cask: "波本·泥煤", tier: "中端", confidence: "pending" },
     ],
   },
   {
@@ -129,7 +135,15 @@ export const DISTILLERIES: Distillery[] = [
     story: "国际烈酒集团在华高端布局，行业高端价格锚点。",
     source: "行业盘点（CWS）",
     confidence: "verified",
-    flavor: { dominant: ["高端 / 精细（行业共识，待聚合）"] },
+    process: {
+      still: "双 Forsyth 壶式蒸馏器（20000L 洗酒器 + 14000L 烈酒器）",
+      cask: "波本 + 雪莉 + 中国丹宁橡木（蒙古栎）",
+      maturation: "发酵可达 100h",
+    },
+    flavor: {
+      dominant: ["糖浆-棉花糖甜感（待聚合）", "柚木-雪松-薄荷柑橘（待聚合）"],
+      community: "Words of Whisky（Thijs 8.3/10）— https://wordsofwhisky.com/the-chuan-pure-malt-whisky-review/",
+    },
     products: [
       { name: "叠川", cask: "待核", tier: "高端", priceBand: "888 元（锚点）", confidence: "verified" },
     ],
@@ -222,13 +236,14 @@ export const DISTILLERIES: Distillery[] = [
     story: "以「100% 中国橡木桶陈酿」为核心定位：长白山蒙古栎 + 荔枝白兰地、金桔白兰地润桶，岭南水果白兰地基因。",
     source: "威士忌杂志中国编辑部 / 行业报道（2026 年中）",
     confidence: "pending",
-    process: { cask: "长白山蒙古栎（中国橡木）· 荔枝/金桔白兰地润桶" },
+    process: { cask: "长白山蒙古栎 + 辽东栎（本土木种）· 荔枝酒/金桔白兰地润桶 + 泥煤蒙古栎桶" },
     flavor: {
-      dominant: ["中国橡木 / 岭南果香（报道口径，待聚合）"],
-      community: "待以真人盲品聚合，AI 不做判断",
+      dominant: ["水楢-杜松-柚子（待聚合）", "木桶树脂（待聚合）"],
+      community: "WhiskyNotes（Ruben 2026-07）— https://www.whiskynotes.be/2026/world/kwun-cheung-chinese-single-malt-whisky/",
     },
     products: [
-      { name: "中国橡木桶单一麦芽", cask: "100% 中国橡木", tier: "待核", confidence: "pending" },
+      { name: "荔枝酒调味蒙古栎桶 #047", cask: "荔枝酒润桶·蒙古栎", tier: "待核", confidence: "pending" },
+      { name: "泥煤蒙古栎桶 #037", cask: "泥煤·蒙古栎", tier: "待核", confidence: "pending", note: "三款最佳(85)" },
     ],
   },
   {
