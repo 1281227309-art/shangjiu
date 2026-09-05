@@ -35,10 +35,11 @@ L.push("| 酒厂 | 产区 | 背景 | 定位 | 工艺/桶型 | 风味方向 | 可
 L.push("|---|---|---|---|---|---|---|");
 for (const d of DISTILLERIES) {
   const process = d.process
-    ? [d.process.cask, d.process.malt, d.process.maturation].filter(Boolean).join("；")
+    ? [d.process.still, d.process.cask, d.process.malt, d.process.maturation].filter(Boolean).join("；")
     : "—";
   const flavor = (d.flavor?.dominant ?? []).join("、") || d.style;
-  L.push(`| ${d.name} | ${regionName(d.region)} | ${d.owner ?? "—"} | ${d.style} | ${process} | ${flavor} | ${C[d.confidence]} |`);
+  const community = d.flavor?.community ? `（${d.flavor.community}）` : "";
+  L.push(`| ${d.name} | ${regionName(d.region)} | ${d.owner ?? "—"} | ${d.style} | ${process} | ${flavor}${community} | ${C[d.confidence]} |`);
 }
 L.push("");
 
