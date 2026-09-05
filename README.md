@@ -2,7 +2,7 @@
 
 # 上九国威知识库 MCP
 
-**Shangjiu Chinese Whisky Knowledge Base MCP**
+上九中国威士忌知识库 MCP · Shangjiu Chinese Whisky Knowledge Base MCP
 
 > **让世界喝懂中国威士忌的开源 AI 插件**
 
