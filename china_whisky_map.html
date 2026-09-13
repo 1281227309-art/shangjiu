@@ -35,14 +35,14 @@
 <body>
 <div class="header">
   <h1>中国威士忌版图 <span>｜ 上九国威知识库</span></h1>
-  <div class="sub">13 家国产威士忌酒厂 · 9 大产区萌芽体系（其中 8 家已有酒厂标注，千岛湖为立项产区）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
+  <div class="sub">14 家国产威士忌酒厂 · 10 大产区萌芽体系（其中 9 家已有酒厂标注，千岛湖为立项产区）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
 </div>
 <div class="wrap">
   <div id="chart"><div class="map-note">地图加载中…</div></div>
   <div class="sidebar" id="sidebar"></div>
 </div>
 <div class="footer-note">
-  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位；桶型/风味为主导向，待核）。千岛湖产区为水源型立项产区（行业团体标准立项地，暂无酒厂标注）。
+  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI；高朗暂为浏阳市级参考定位，待补精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位；桶型/风味为主导向，待核）。千岛湖产区为水源型立项产区（行业团体标准立项地，暂无酒厂标注）。
   滚轮缩放地图，悬停/点击查看酒厂方向与桶型风味，点击右侧列表可定位到酒厂。知识库数据遵循诚实守则：不编造品鉴笔记与价格，凡无一手来源一律标注待核。
 </div>
 <script>
@@ -50,7 +50,8 @@ var verified = [
   { name: "崃州 · 四川邛崃 · 百润股份", value: [103.514919, 30.391510, 60], id: "laizhou" },
   { name: "叠川 · 四川峨眉山 · 保乐力加", value: [103.428854, 29.498612, 55], id: "diechuan" },
   { name: "云拓 · 云南洱源 · 帝亚吉欧", value: [99.940795, 25.997066, 55], id: "yuntuo" },
-  { name: "大芹 · 福建平和 · 独立", value: [117.107194, 24.191707, 45], id: "daqin" }
+  { name: "大芹 · 福建平和 · 独立", value: [117.107194, 24.191707, 45], id: "daqin" },
+  { name: "高朗 · 湖南浏阳 · 高朗烈酒集团", value: [113.643000, 28.164000, 50], id: "gaolang" }
 ];
 var pending = [
   { name: "凌酝 · 云南巍山 · 独立", value: [100.236310, 25.389369, 35], id: "lingyun" },
@@ -81,9 +82,10 @@ var distilleries = {
   jisiboer: { nm: "吉斯波尔", direction: "东方香型体系", cask: "蒙古栎「雕堡桶」", flavor: "沉香 / 茶韵（待核）", verified: false, region: "胶东半岛产区", meta: "山东烟台牟平 · 吉斯集团" },
   yuzhijin: { nm: "钰之锦", direction: "风味桶实验", cask: "茶桶 / 树莓桶 / 霞多丽桶", flavor: "茶 / 树莓果香（待核）", verified: false, region: "胶东半岛产区", meta: "山东蓬莱 · 独立" },
   guqi: { nm: "古奇（古井贡×卡慕）", direction: "草本威士忌", cask: "待核", flavor: "草本 / 药香（待核）", verified: false, region: "亳州产区", meta: "安徽亳州 · 古井贡×卡慕" },
-  alajiaobao: { nm: "阿拉嘉宝/香格里拉", direction: "青稞威士忌 · 极端风土", cask: "待核", flavor: "青稞谷物感（待核）", verified: false, region: "青藏高原产区", meta: "西藏拉萨 · 独立" }
+  alajiaobao: { nm: "阿拉嘉宝/香格里拉", direction: "青稞威士忌 · 极端风土", cask: "待核", flavor: "青稞谷物感（待核）", verified: false, region: "青藏高原产区", meta: "西藏拉萨 · 独立" },
+  gaolang: { nm: "高朗（Goalong）", direction: "单一麦芽 · 多桶型试验 · 酒旅融合", cask: "酒窖 28 种桶型（波本/中式雪莉/中国白兰地/水楢/泥煤 + 红酒桶）", flavor: "麦芽-柑橘青苹果 / 奶油甜感·烤面包焦香", verified: true, region: "浏阳（湘东）产区", meta: "湖南浏阳 · 高朗烈酒集团" }
 };
-var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "千岛湖产区"];
+var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "浏阳（湘东）产区", "千岛湖产区"];
 var allMarks = verified.concat(pending).concat(regionMarks);
 var chartEl = document.getElementById("chart");
 
