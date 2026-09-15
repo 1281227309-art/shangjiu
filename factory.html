@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>厂家内容表单 · 上九 · 国威知识库</title>
+<meta name="description" content="上九 · 国威知识库 厂家内容采集表单：把「你是谁」定义成标准。厂方一手资料共建入口。" />
+<style>
+  :root{
+    --bg:#14100b; --bg2:#1c1610; --panel:#201a12;
+    --ink:#f2e9d8; --ink2:#cfc3ad; --muted:#9a8f7d;
+    --gold:#d4a94e; --gold-soft:rgba(212,169,78,.14);
+    --line:rgba(242,233,216,.10); --line-gold:rgba(212,169,78,.28);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:radial-gradient(1200px 600px at 70% -10%, rgba(212,169,78,.10), transparent 60%),
+               radial-gradient(900px 500px at 0% 30%, rgba(184,134,59,.05), transparent 50%),
+               var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+
+  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:12px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;border-radius:10px;background:#fff;padding:4px;object-fit:contain;flex:none;
+        border:1px solid var(--line-gold);box-shadow:0 4px 14px rgba(0,0,0,.3)}
+  .brand b{font-family:Georgia,"Songti SC","Noto Serif SC",serif;letter-spacing:.02em;font-size:18px}
+  .brand span{font-family:ui-monospace,"SF Mono",Menlo,monospace;color:var(--muted);font-size:12px;margin-left:4px}
+  nav a{color:var(--ink2);text-decoration:none;font-size:14px;padding:12px 16px;border:1px solid transparent;border-radius:8px;transition:.15s}
+  nav a:hover{color:var(--gold);border-color:var(--line-gold)}
+  .nav-cta{color:var(--gold)!important;border-color:var(--line-gold)!important}
+
+  header{padding:64px 0 40px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-family:ui-monospace,Menlo,monospace;font-size:14px;
+          color:var(--gold);letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line-gold);
+          padding:8px 16px;border-radius:999px;background:var(--gold-soft)}
+  .kicker::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+  h1{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-weight:600;font-size:clamp(2rem,5vw,3.2rem);
+     line-height:1.15;margin:24px 0 16px;letter-spacing:-.01em}
+  h1 em{font-style:normal;color:var(--gold)}
+  .sub{font-size:15px;color:var(--ink2);max-width:760px}
+  .sub b{color:var(--ink)}
+
+  section{padding:56px 0;border-top:1px solid var(--line)}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+  .sec-head .no{font-family:ui-monospace,Menlo,monospace;color:var(--gold);font-size:14px;letter-spacing:.1em}
+  h2{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-weight:600;font-size:24px}
+  h3{font-family:Georgia,"Songti SC",serif;font-size:18px;margin:0 0 4px;font-weight:600}
+  .lead{color:var(--muted);margin-bottom:20px;font-size:14px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;transition:.18s}
+  .card:hover{border-color:var(--line-gold)}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+  @media(max-width:860px){.grid3{grid-template-columns:1fr}}
+  .card .tag{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--gold);letter-spacing:.06em}
+  .card p{color:var(--muted);font-size:14px}
+
+  /* ---------- form ---------- */
+  fieldset{border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin:0 0 20px;background:var(--bg2)}
+  legend{font-family:ui-monospace,Menlo,monospace;color:var(--gold);font-size:14px;letter-spacing:.08em;padding:0 10px}
+  .row{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  @media(max-width:680px){.row{grid-template-columns:1fr;gap:6px}}
+  .row label{color:var(--ink2);font-size:14px;padding-top:10px}
+  .row label code{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted);display:block;margin-top:2px}
+  .row .hint{color:var(--muted);font-size:12px;margin-top:6px;display:block}
+
+  input[type=text],input[type=email],input[type=url],input[type=number],textarea,select{
+    width:100%;background:#0e0b07;color:var(--ink);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;transition:.15s;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+  textarea{resize:vertical;min-height:76px;line-height:1.55}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+         background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+
+  .conf{display:inline-flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .conf input{display:none}
+  .conf label{cursor:pointer;font-size:12px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;
+              color:var(--muted);font-family:ui-monospace,Menlo,monospace;transition:.15s;padding-top:5px}
+  .conf input:checked + label{color:#24180a;background:var(--gold);border-color:var(--gold);font-weight:600}
+
+  .checks{display:flex;flex-direction:column;gap:10px}
+  .checks label{display:flex;gap:10px;align-items:flex-start;color:var(--ink2);font-size:14px;cursor:pointer;padding-top:0}
+  .checks input{margin-top:5px;accent-color:var(--gold);flex:none;width:15px;height:15px}
+
+  .prod{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr .8fr;gap:8px;margin-bottom:8px}
+  @media(max-width:820px){.prod{grid-template-columns:1fr 1fr;gap:8px}}
+  .prod-head{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--gold);letter-spacing:.06em;padding-bottom:2px}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-size:15px;padding:12px 24px;border-radius:12px;
+       font-weight:600;transition:.16s;border:1px solid transparent;cursor:pointer;font-family:inherit}
+  .btn.primary{background:linear-gradient(135deg,var(--gold),#9c7231);color:#24180a;box-shadow:0 8px 24px rgba(184,134,59,.30)}
+  .btn.primary:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(184,134,59,.40)}
+  .btn.ghost{color:var(--ink2);border:1px solid var(--line);background:transparent}
+  .btn.ghost:hover{color:var(--gold);border-color:var(--line-gold)}
+  .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+
+  pre{background:#0e0b07;border:1px solid var(--line);border-radius:12px;padding:20px;overflow-x:auto;font-size:13px;max-height:420px}
+  code,pre{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  pre code{color:var(--ink2)}
+
+  .note{border-left:3px solid var(--gold);background:var(--gold-soft);padding:14px 18px;border-radius:0 10px 10px 0;
+        color:var(--ink2);font-size:14px;margin:16px 0}
+  .note b{color:var(--ink)}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+  th{color:var(--gold);font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.06em;font-weight:400}
+  td{color:var(--ink2)}
+  td code{color:var(--gold);font-size:12px}
+
+  footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center}
+  footer a{color:var(--ink2);text-decoration:none;padding:8px 12px;border-radius:8px;display:inline-block}
+  footer a:hover{color:var(--gold)}
+
+  .toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(120%);background:var(--gold);color:#24180a;
+         padding:12px 24px;border-radius:10px;font-weight:600;font-size:14px;transition:.3s;z-index:99}
+  .toast.on{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <div class="brand"><img class="logo" src="assets/logo.jpg" alt="上九" onerror="this.style.display='none'" /><b>上九 · Shangjiu</b><span>国威知识库 MCP</span></div>
+    <a class="nav-cta" href="https://1281227309-art.github.io/shangjiu/">← 返回主页</a>
+  </nav>
+
+  <header>
+    <span class="kicker">厂方共建 · 内容采集</span>
+    <h1>把<em>「你是谁」</em>定义成标准</h1>
+    <p class="sub">
+      国产威士忌缺的不是酒，是一套 <b>人人能读、人人能引用、经得起核查</b> 的讲法。
+      填完这份表单，你的厂会带可信度标注进入「上九 · 国威知识库」——
+      当 AI 被问「国产威士忌有哪些东方风味的厂」时，它会引用 <b>你的真实数据</b>，而不是营销号的转述。
+    </p>
+  </header>
+
+<!-- ============================================================
+     厂家内容表单 SECTION —— 可直接整段复制进 landing.html
+     依赖：landing.html 的 :root 变量与 .card/.btn/.note/.wrap 等样式
+     ============================================================ -->
+  <section id="factory">
+    <div class="sec-head"><span class="no">FORM</span><h2>厂家内容表单</h2></div>
+    <p class="lead">字段与知识库数据结构严格对齐 · 填写后可直接转为知识库条目</p>
+
+    <!--
+      📌 本文件定位（勿与 Markdown 版混淆）
+      · 本文件（网页版）：在线 / 链接传递。对外只发一个链接，厂方在线填写，
+        自动校验 + 实时生成 JSON + 一键提交 GitHub Issue + 草稿自动保存。
+      · 厂家内容表单.md（离线版）：离线 / 文件传递。需要发文件、打印或转 Word/PDF 时用。
+      · 字段一律以 src/data.ts 为准；新增字段先改代码，再同步两份表单。
+      · 两者内容等价，按渠道选用其一即可，不必让厂方两份都填。
+    -->
+    <div class="note">
+      <b>本页为在线填写版。</b>若你更需要「发文件给厂方填写」的形式，请使用同目录下的
+      <code>厂家内容表单.md</code>（离线版）。两份内容等价，<b>选其一填写即可</b>。
+    </div>
+
+    <div class="grid3">
+      <div class="card"><div class="tag">01 · 诚实</div><h3>留空不丢分</h3><p>凡无一手来源的品鉴笔记、价格、工艺，一律留空标注「待采集」。编造才会丢分。</p></div>
+      <div class="card"><div class="tag">02 · 有据</div><h3>每条带出处</h3><p>尽量给出官网链接、产品手册或厂方书面确认。数据类提交会人工核对来源。</p></div>
+      <div class="card"><div class="tag">03 · 授权</div><h3>你来决定引用</h3><p>需勾选授权，我们才会在注明出处的前提下公开引用你的文字与数据。</p></div>
+    </div>
+
+    <form id="kbForm" novalidate>
+
+      <!-- ---------- A 基础信息 ---------- -->
+      <fieldset>
+        <legend>A. 基础信息</legend>
+
+        <div class="row">
+          <label>酒厂名称<code>name</code></label>
+          <div><input type="text" name="name" placeholder="官方全称，如「大芹」「崃州」" required /></div>
+        </div>
+
+        <div class="row">
+          <label>建议 id<code>id</code></label>
+          <div>
+            <input type="text" name="id" placeholder="全小写英文/拼音，无空格，如 daqin" pattern="[a-z0-9_-]+" />
+            <span class="hint">用于 URL 与工具调用；不确定可留空，由我们生成。</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>所属产区<code>region</code></label>
+          <div>
+            <select name="region">
+              <option value="">— 请选择（不确定选最后一项）—</option>
+              <option value="qionglai">邛崃（四川）</option>
+              <option value="emeishan">峨眉山（四川）</option>
+              <option value="qiandaohu">千岛湖（浙江）</option>
+              <option value="dali">大理（云南）</option>
+              <option value="dianxi">滇西 · 横断山带（云南）</option>
+              <option value="guangdong">广东产区带（广东）</option>
+              <option value="shandong">胶东半岛（山东）</option>
+              <option value="bozhou">亳州（安徽）</option>
+              <option value="xizang">青藏高原（西藏）</option>
+              <option value="liuyang">浏阳 · 湘东（湖南）</option>
+              <option value="__other__">以上都不是（我在 J 区说明）</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>具体地点<code>location</code></label>
+          <div><input type="text" name="location" placeholder="省 / 市 / 县 / 具体位置" /></div>
+        </div>
+
+        <div class="row">
+          <label>背景 / 投资方<code>owner</code></label>
+          <div>
+            <input type="text" name="owner" placeholder="独立 / 酒业集团 / 中外合资" />
+            <span class="hint">可写「不便透露」。</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>一句话定位<code>style</code></label>
+          <div><input type="text" name="style" placeholder="如「单一麦芽 · 东方风味」「高端 · 高海拔」" /></div>
+        </div>
+
+        <div class="row">
+          <label>一句话故事<code>story</code></label>
+          <div>
+            <textarea name="story" maxlength="200" placeholder="你希望别人怎么记住你？（≤100 字最佳）"></textarea>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ---------- B 工艺 ---------- -->
+      <fieldset>
+        <legend>B. 工艺</legend>
+        <div class="note">
+          <b>重点：</b>中国本土桶型（蒙古栎、麻栎、中国橡木、茶桶、黄酒桶…）是你的<b>差异化资产</b>，请务必写清楚——这是「东方风味」讲法的核心。
+        </div>
+
+        <div class="row">
+          <label>麦芽 / 原料<code>malt</code></label>
+          <div><input type="text" name="malt" placeholder="大麦品种、是否国产麦、是否用青稞/谷物" /></div>
+        </div>
+        <div class="row">
+          <label>酵母<code>yeast</code></label>
+          <div><input type="text" name="yeast" placeholder="菌种 / 是否自培 / 特殊酵母" /></div>
+        </div>
+        <div class="row">
+          <label>蒸馏器<code>still</code></label>
+          <div><input type="text" name="still" placeholder="壶式 / 柱式 / 混合，如「双壶」" /><span class="hint">可写「不便透露」。</span></div>
+        </div>
+        <div class="row">
+          <label>桶型体系<code>cask</code></label>
+          <div><input type="text" name="cask" placeholder="波本桶 / 雪莉桶 / 中国橡木 / 蒙古栎 / 茶桶 / 黄酒桶…" /></div>
+        </div>
+        <div class="row">
+          <label>陈酿时间<code>maturation</code></label>
+          <div><input type="text" name="maturation" placeholder="最低年份 / 主力年份 / 是否有原桶强度" /></div>
+        </div>
+      </fieldset>
+
+      <!-- ---------- C 风土 ---------- -->
+      <fieldset>
+        <legend>C. 风土</legend>
+        <div class="row">
+          <label>气候<code>climate</code></label>
+          <div><input type="text" name="climate" placeholder="年均温 / 温差 / 湿度 / 海拔多少米" /></div>
+        </div>
+        <div class="row">
+          <label>水源<code>water</code></label>
+          <div><input type="text" name="water" placeholder="冰川 / 湖泊 / 山泉 / 地下水；水质特点" /></div>
+        </div>
+        <div class="row">
+          <label>熟成环境<code>aging</code></label>
+          <div><input type="text" name="aging" placeholder="酒窖类型 / 恒温 / 海边 / 山洞 / 高海拔熟成" /></div>
+        </div>
+      </fieldset>
+
+      <!-- ---------- D 风味 ---------- -->
+      <fieldset>
+        <legend>D. 风味</legend>
+        <div class="row">
+          <label>官方风味轮<code>official</code></label>
+          <div><textarea name="official" placeholder="你们官方对外描述的风味，尽量用原文"></textarea></div>
+        </div>
+        <div class="row">
+          <label>主导风味词<code>dominant</code></label>
+          <div>
+            <input type="text" name="dominant" placeholder="3–6 个词，用顿号分隔：果香、茶韵、蜂蜜、橡木、烟熏" />
+            <span class="hint">知识库中该字段来自真人盲品聚合；你的官方描述会如实归到「官方风味轮」。</span>
+          </div>
+        </div>
+        <div class="row">
+          <label>社区 / 盲品来源<code>community</code></label>
+          <div><input type="text" name="community" placeholder="第三方盲品会、社群评价、KOL 评测（请给出处）" /></div>
+        </div>
+      </fieldset>
+
+      <!-- ---------- E 产品线 ---------- -->
+      <fieldset>
+        <legend>E. 产品线</legend>
+        <div class="prod prod-head">
+          <span>产品名称</span><span>桶型</span><span>档位</span><span>价格带</span><span>可信度</span>
+        </div>
+        <div id="prodRows"></div>
+        <button type="button" class="btn ghost" style="margin-top:8px" onclick="addProduct()">+ 添加产品</button>
+        <span class="hint" style="display:block;margin-top:10px">
+          价格仅在有真实来源时填写（官方指导价 / 官方电商页）。无来源请留空，我们标为「待确认」。
+        </span>
+      </fieldset>
+
+      <!-- ---------- F 来源与授权 ---------- -->
+      <fieldset>
+        <legend>F. 来源与授权</legend>
+        <div class="row">
+          <label>主要数据来源<code>source</code></label>
+          <div>
+            <input type="text" name="source" placeholder="官网链接 / 产品手册 / 官方公众号推文 / 厂方书面确认" required />
+            <span class="hint">必填。无来源的条目不进知识库。</span>
+          </div>
+        </div>
+        <div class="row">
+          <label>整体可信度<code>confidence</code></label>
+          <div>
+            <div class="conf">
+              <input type="radio" id="c1" name="confidence" value="verified" /><label for="c1">✅ verified 已核实</label>
+              <input type="radio" id="c2" name="confidence" value="pending" checked /><label for="c2">🟡 pending 待确认</label>
+              <input type="radio" id="c3" name="confidence" value="unverified" /><label for="c3">⬜ unverified 待采集</label>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <label>授权确认<code>required</code></label>
+          <div class="checks">
+            <label><input type="checkbox" id="auth1" />我确认以上信息为一手或经我核实的资料，可用于知识库公开引用。</label>
+            <label><input type="checkbox" id="auth2" />我授权「上九 · 国威知识库」在注明出处的前提下使用本表单提供的文字与数据。</label>
+            <label><input type="checkbox" id="auth3" />我授权使用所提供的图片 / Logo（版权方：<input type="text" id="auth3by" style="width:180px;display:inline-block;padding:4px 8px" placeholder="版权方" />）。</label>
+          </div>
+        </div>
+        <div class="row">
+          <label>联系人 / 日期<code>contact</code></label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <input type="text" name="contact" placeholder="联系人 + 职务" style="flex:2;min-width:180px" />
+            <input type="text" name="date" placeholder="日期" style="flex:1;min-width:120px" />
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ---------- H 开放题 ---------- -->
+      <fieldset>
+        <legend>H. 你希望我们怎么讲你？（选填，但很关键）</legend>
+        <div class="row">
+          <label>① 最想被记住的一点</label>
+          <div><input type="text" name="q1" placeholder="一句话" /></div>
+        </div>
+        <div class="row">
+          <label>② 被讲错过的地方</label>
+          <div><input type="text" name="q2" placeholder="媒体/营销号讲错了什么？想纠正什么？" /></div>
+        </div>
+        <div class="row">
+          <label>③ 最不想被比较的对象</label>
+          <div><input type="text" name="q3" placeholder="以及为什么" /></div>
+        </div>
+        <div class="row">
+          <label>④ 独家故事</label>
+          <div><textarea name="q4" placeholder="创始契机、技术攻坚、某次失败的实验…"></textarea></div>
+        </div>
+        <div class="row">
+          <label>⑤ 未来 1–2 年</label>
+          <div><textarea name="q5" placeholder="你最想做出来的那一款酒是什么样？"></textarea></div>
+        </div>
+      </fieldset>
+
+      <!-- ---------- J 补充 ---------- -->
+      <fieldset>
+        <legend>J. 补充说明</legend>
+        <div class="row" style="grid-template-columns:1fr">
+          <div><textarea name="extra" placeholder="新产区、特殊工艺、双蒸馏厂关系、代工/自建、任何需要额外说明的"></textarea></div>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button type="button" class="btn primary" onclick="build()">生成提交内容 →</button>
+        <button type="button" class="btn ghost" onclick="copyJson()">复制 JSON</button>
+        <button type="button" class="btn ghost" onclick="downloadJson()">下载 JSON</button>
+        <button type="button" class="btn ghost" onclick="toIssue()">到 GitHub 提交</button>
+        <button type="button" class="btn ghost" onclick="resetForm()">清空</button>
+      </div>
+    </form>
+
+    <div id="out" style="display:none;margin-top:24px">
+      <div class="sec-head"><span class="no">OUT</span><h2>提交内容预览</h2></div>
+      <p class="lead">可直接复制、下载，或点「到 GitHub 提交」预填 Issue。</p>
+      <pre><code id="outJson"></code></pre>
+    </div>
+  </section>
+<!-- ===================== 表单 SECTION 结束 ===================== -->
+
+  <section id="flow">
+    <div class="sec-head"><span class="no">FLOW</span><h2>填完之后会发生什么</h2></div>
+    <pre><code>你填写的表单（一手信息）
+        │  人工核对 source + confidence
+        ▼
+   进入知识库  src/data.ts（带 ✅/🟡/⬜ 标注）
+        │
+        ▼
+   AI 回答「国产威士忌有哪些东方风味的厂」时，
+   引用你的真实数据，并诚实标注未核实项
+        │
+        ▼
+   你的厂被「正确地讲清楚」—— 这就是声量</code></pre>
+    <div class="note">
+      另外，你也可以用知识库的 <code>submit_tasting_note</code> 提交真人品鉴：
+      <b>真人品鉴 → AI 只收集不判断 → 待复核 → 通过才进知识库</b>。
+    </div>
+  </section>
+
+  <footer>
+    <span>© 上九蒸馏所 · 国威知识库 ｜ MIT</span>
+    <span>
+      <a href="https://github.com/1281227309-art/shangjiu">GitHub</a>
+      <a href="https://1281227309-art.github.io/shangjiu/">主页</a>
+      <a href="https://glama.ai/mcp/servers/1281227309-art/shangjiu">Glama</a>
+    </span>
+  </footer>
+</div>
+
+<div class="toast" id="toast">已复制</div>
+
+<script>
+const REPO = "1281227309-art/shangjiu";
+
+/* ---------- 产品行 ---------- */
+function addProduct(name, cask, tier, price, conf){
+  const wrap = document.getElementById("prodRows");
+  const d = document.createElement("div");
+  d.className = "prod";
+  d.innerHTML = `
+    <input type="text" class="p-name"  placeholder="产品名" value="${name||''}" />
+    <input type="text" class="p-cask"  placeholder="桶型"   value="${cask||''}" />
+    <input type="text" class="p-tier"  placeholder="口粮/中端/高端" value="${tier||''}" />
+    <input type="text" class="p-price" placeholder="如 100–400 元"  value="${price||''}" />
+    <select class="p-conf">
+      <option value="verified"${conf==='verified'?' selected':''}>✅ 已核实</option>
+      <option value="pending"${(!conf||conf==='pending')?' selected':''}>🟡 待确认</option>
+      <option value="unverified"${conf==='unverified'?' selected':''}>⬜ 待采集</option>
+    </select>`;
+  wrap.appendChild(d);
+}
+addProduct();
+
+/* ---------- 收集 ---------- */
+function val(n){ const el = document.querySelector(`[name="${n}"]`); return el ? el.value.trim() : ""; }
+function nullable(s){ return s ? s : undefined; }
+
+function collect(){
+  const products = [...document.querySelectorAll("#prodRows .prod")].map(r => {
+    const o = {
+      name:  r.querySelector(".p-name").value.trim(),
+      cask:  r.querySelector(".p-cask").value.trim(),
+      tier:  r.querySelector(".p-tier").value.trim(),
+      confidence: r.querySelector(".p-conf").value
+    };
+    const p = r.querySelector(".p-price").value.trim();
+    if (p) o.priceBand = p;
+    return o;
+  }).filter(p => p.name || p.cask || p.tier);
+
+  const conf = document.querySelector('input[name="confidence"]:checked')?.value || "pending";
+  const dominant = val("dominant") ? val("dominant").split(/[、,，]/).map(s=>s.trim()).filter(Boolean) : undefined;
+
+  const process = {};
+  [["malt","malt"],["yeast","yeast"],["still","still"],["cask","cask"],["maturation","maturation"]]
+    .forEach(([k])=>{ const v = val(k); if (v) process[k] = v; });
+
+  const terroir = {};
+  ["climate","water","aging"].forEach(k=>{ const v = val(k); if (v) terroir[k] = v; });
+
+  const flavor = {};
+  if (val("official")) flavor.official = val("official");
+  if (dominant) flavor.dominant = dominant;
+  if (val("community")) flavor.community = val("community");
+
+  const distillery = {
+    id: val("id") || "",
+    name: val("name"),
+    region: val("region"),
+    location: val("location"),
+    owner: val("owner") || undefined,
+    style: val("style"),
+    story: val("story"),
+    source: val("source"),
+    confidence: conf
+  };
+  if (Object.keys(process).length) distillery.process = process;
+  if (Object.keys(terroir).length) distillery.terroir = terroir;
+  if (Object.keys(flavor).length)  distillery.flavor  = flavor;
+  if (products.length)             distillery.products = products;
+
+  // 去掉 undefined（保持 JSON 干净）
+  const clean = JSON.parse(JSON.stringify(distillery));
+
+  const extra = {
+    contact: val("contact"),
+    date: val("date"),
+    authorization: {
+      data_accurate: document.getElementById("auth1").checked,
+      use_text_data: document.getElementById("auth2").checked,
+      use_media: document.getElementById("auth3").checked,
+      media_owner: val("auth3by") || undefined
+    },
+    open_questions: {
+      q1_most_memorable: val("q1") || undefined,
+      q2_misrepresented: val("q2") || undefined,
+      q3_not_compared_to: val("q3") || undefined,
+      q4_exclusive_story: val("q4") || undefined,
+      q5_next_product: val("q5") || undefined
+    },
+    extra_note: val("extra") || undefined
+  };
+
+  return { distillery: clean, meta: JSON.parse(JSON.stringify(extra)) };
+}
+
+/* ---------- 输出 ---------- */
+let lastJson = "";
+function build(){
+  const name = val("name"), source = val("source");
+  if (!name || !source){
+    toast("请填写「酒厂名称」和「主要数据来源」（必填）");
+    return;
+  }
+  if (!document.getElementById("auth1").checked || !document.getElementById("auth2").checked){
+    toast("请勾选前两项授权确认");
+    return;
+  }
+  const data = collect();
+  lastJson = JSON.stringify(data, null, 2);
+  document.getElementById("outJson").textContent = lastJson;
+  document.getElementById("out").style.display = "block";
+  document.getElementById("out").scrollIntoView({behavior:"smooth"});
+}
+
+function copyJson(){
+  if (!lastJson) return toast("请先点「生成提交内容」");
+  navigator.clipboard.writeText(lastJson).then(()=>toast("JSON 已复制"), ()=>toast("复制失败，请手动选择"));
+}
+
+function downloadJson(){
+  if (!lastJson) return toast("请先点「生成提交内容」");
+  const name = (val("id") || val("name") || "distillery").replace(/[^\w\u4e00-\u9fa5-]/g,"_");
+  const blob = new Blob([lastJson], {type:"application/json;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name + "-distillery.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("已下载");
+}
+
+/* 无后端的提交方式：预填 GitHub Issue */
+function toIssue(){
+  if (!lastJson) return toast("请先点「生成提交内容」");
+  const title = "【厂家共建】" + (val("name") || "新增酒厂");
+  const body = [
+    "### 厂家内容表单提交",
+    "",
+    "```json",
+    lastJson,
+    "```",
+    "",
+    "_由 landing 厂家表单生成_"
+  ].join("\n");
+  const url = `https://github.com/${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+  window.open(url, "_blank");
+}
+
+function resetForm(){
+  document.getElementById("kbForm").reset();
+  document.getElementById("prodRows").innerHTML = "";
+  addProduct();
+  document.getElementById("out").style.display = "none";
+  lastJson = "";
+  localStorage.removeItem("shangjiu_kb_form");
+  toast("已清空");
+}
+
+/* ---------- 草稿自动保存 ---------- */
+const KEY = "shangjiu_kb_form";
+function saveDraft(){
+  const o = {};
+  new FormData(document.getElementById("kbForm")).forEach((v,k)=>{ o[k]=v; });
+  o.__products = [...document.querySelectorAll("#prodRows .prod")].map(r=>({
+    name:r.querySelector(".p-name").value, cask:r.querySelector(".p-cask").value,
+    tier:r.querySelector(".p-tier").value, price:r.querySelector(".p-price").value,
+    conf:r.querySelector(".p-conf").value
+  }));
+  o.__auth = [document.getElementById("auth1").checked, document.getElementById("auth2").checked, document.getElementById("auth3").checked];
+  try{ localStorage.setItem(KEY, JSON.stringify(o)); }catch(e){}
+}
+function loadDraft(){
+  let o; try{ o = JSON.parse(localStorage.getItem(KEY) || "null"); }catch(e){}
+  if (!o) return;
+  Object.entries(o).forEach(([k,v])=>{
+    if (k.startsWith("__")) return;
+    const el = document.querySelector(`[name="${k}"]`);
+    if (!el) return;
+    if (el.type === "radio"){ const r=document.querySelector(`[name="${k}"][value="${v}"]`); if(r) r.checked=true; }
+    else el.value = v;
+  });
+  if (o.__products && o.__products.length){
+    document.getElementById("prodRows").innerHTML = "";
+    o.__products.forEach(p=>addProduct(p.name,p.cask,p.tier,p.price,p.conf));
+  }
+  if (o.__auth){ const a=o.__auth; document.getElementById("auth1").checked=!!a[0]; document.getElementById("auth2").checked=!!a[1]; document.getElementById("auth3").checked=!!a[2]; }
+  toast("已恢复上次草稿");
+}
+document.getElementById("kbForm").addEventListener("input", saveDraft);
+document.getElementById("kbForm").addEventListener("change", saveDraft);
+loadDraft();
+
+/* ---------- toast ---------- */
+let tt;
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("on");
+  clearTimeout(tt); tt = setTimeout(()=>el.classList.remove("on"), 2200);
+}
+</script>
+</body>
+</html>
