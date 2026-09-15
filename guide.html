@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>使用指南 · 上九 · 国威知识库 MCP</title>
+<meta name="description" content="上九 · 国威知识库 MCP 使用指南：9 个工具、10 产区、14 酒厂、典型场景、共建路径与排查。" />
+<style>
+  :root{
+    --bg:#14100b; --bg2:#1c1610; --panel:#201a12;
+    --ink:#f2e9d8; --ink2:#cfc3ad; --muted:#9a8f7d;
+    --gold:#d4a94e; --gold-soft:rgba(212,169,78,.14);
+    --line:rgba(242,233,216,.10); --line-gold:rgba(212,169,78,.28);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:24px}
+  body{
+    background:radial-gradient(1200px 600px at 70% -10%, rgba(212,169,78,.10), transparent 60%),
+               radial-gradient(900px 500px at 0% 30%, rgba(184,134,59,.05), transparent 50%), var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:12px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;border-radius:10px;background:#fff;padding:4px;object-fit:contain;flex:none;border:1px solid var(--line-gold)}
+  .brand b{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-size:18px}
+  .brand span{font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-size:12px;margin-left:4px}
+  nav a{color:var(--ink2);text-decoration:none;font-size:14px;padding:12px 16px;border:1px solid transparent;border-radius:8px;transition:.15s}
+  nav a:hover{color:var(--gold);border-color:var(--line-gold)}
+  .nav-cta{color:var(--gold)!important;border-color:var(--line-gold)!important}
+  .navlinks{display:flex;gap:4px;flex-wrap:wrap}
+
+  main{padding:40px 0 64px;display:grid;grid-template-columns:220px 1fr;gap:44px;align-items:start}
+  @media(max-width:900px){main{grid-template-columns:1fr;gap:24px} .toc{position:static!important;max-height:none!important}}
+
+  .toc{position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;border-left:2px solid var(--line);padding-left:16px}
+  .toc h4{font-family:ui-monospace,Menlo,monospace;color:var(--gold);font-size:12px;letter-spacing:.1em;margin-bottom:10px;font-weight:400}
+  .toc a{display:block;color:var(--muted);text-decoration:none;font-size:13px;padding:5px 0;line-height:1.4;transition:.15s}
+  .toc a:hover{color:var(--gold)}
+
+  article h1{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-weight:600;font-size:clamp(1.9rem,4.5vw,2.6rem);line-height:1.2;margin:0 0 8px}
+  article h2{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-weight:600;font-size:22px;margin:44px 0 14px;padding-top:24px;border-top:1px solid var(--line)}
+  article h3{font-family:Georgia,"Songti SC",serif;font-weight:600;font-size:17px;margin:28px 0 10px;color:var(--gold)}
+  article h4{font-size:15px;margin:20px 0 8px}
+  article p{color:var(--ink2);margin:12px 0}
+  article strong{color:var(--ink)}
+  article a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--line-gold)}
+  article a:hover{border-bottom-color:var(--gold)}
+  article hr{border:0;border-top:1px solid var(--line);margin:32px 0}
+  article ul,article ol{color:var(--ink2);margin:12px 0 12px 22px}
+  article li{margin:6px 0}
+  article ul li::marker{color:var(--gold)}
+  article ol li::marker{color:var(--gold);font-family:ui-monospace,Menlo,monospace}
+
+  article code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:13px;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:5px;color:var(--gold)}
+  article pre{background:#0e0b07;border:1px solid var(--line);border-radius:12px;padding:18px;overflow-x:auto;margin:14px 0}
+  article pre code{background:none;padding:0;color:var(--ink2);font-size:13px;line-height:1.6}
+
+  article blockquote{border-left:3px solid var(--gold);background:var(--gold-soft);padding:14px 18px;border-radius:0 10px 10px 0;margin:16px 0}
+  article blockquote p{margin:6px 0;color:var(--ink2)}
+
+  .tw{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:12px}
+  article table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+  article th{background:rgba(255,255,255,.03);color:var(--gold);font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.05em;font-weight:400;padding:11px 14px;border-bottom:1px solid var(--line-gold);white-space:nowrap}
+  article td{color:var(--ink2);padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  article tr:last-child td{border-bottom:0}
+  article td code,article th code{background:rgba(255,255,255,.05)}
+
+  .lead{color:var(--muted);font-size:14px;margin-bottom:8px}
+  footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center}
+  footer a{color:var(--ink2);text-decoration:none;padding:8px 12px;border-radius:8px}
+  footer a:hover{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="brand"><img class="logo" src="assets/logo.jpg" alt="上九" onerror="this.style.display='none'" /><b>上九 · Shangjiu</b><span>国威知识库 MCP</span></div>
+    <div class="navlinks">
+      <a href="landing.html">主页</a>
+      <a class="nav-cta" href="factory.html">厂家共建</a>
+    </div>
+  </nav>
+
+  <main>
+    <aside class="toc">
+      <h4>目录</h4>
+      <a href="#s3-1-它是什么-解决什么问题">1. 它是什么 / 解决什么问题</a><a href="#s4-2-快速开始-3-种接入路径">2. 快速开始（3 种接入路径）</a><a href="#s9-3-9-个工具详解">3. 9 个工具详解</a><a href="#s19-4-典型使用路径-按场景">4. 典型使用路径（按场景）</a><a href="#s25-5-数据层与可信度规则">5. 数据层与可信度规则</a><a href="#s29-6-共建路径">6. 共建路径</a><a href="#s33-7-项目结构与命令速查">7. 项目结构与命令速查</a><a href="#s35-8-常见问题排查">8. 常见问题排查</a><a href="#s42-附-对话示例-真实宿主里的提问-工具调用">附：对话示例（真实宿主里的提问 → 工具调用）</a><a href="#s43-License">License</a>
+    </aside>
+    <article>
+      <h1 id="s1-上九-国威知识库-MCP-使用指南-详细路径">上九 · 国威知识库 MCP —— 使用指南（详细路径）</h1>
+<blockquote><p>面向国产威士忌的 MCP 工具：<strong>国威品鉴 · 选酒导购 · 产区图谱 · 内容生成</strong>
+让 AI 讲中国威士忌时，说的都是真话。</p></blockquote>
+<div class="tw"><table><thead><tr><th style="text-align:left">项目</th><th style="text-align:left">值</th></tr></thead><tbody><tr><td style="text-align:left">MCP 服务器名</td><td style="text-align:left"><code>上九 · 国威知识库</code>（配置键 <code>shangjiu-guowei</code>）</td></tr><tr><td style="text-align:left">版本</td><td style="text-align:left">v0.2.0（stdio）</td></tr><tr><td style="text-align:left">协议</td><td style="text-align:left">Model Context Protocol（stdio）</td></tr><tr><td style="text-align:left">Node 要求</td><td style="text-align:left"><strong>≥ 22</strong>（原生剥离类型，直接跑 <code>.ts</code>，无需构建）</td></tr><tr><td style="text-align:left">License</td><td style="text-align:left">MIT</td></tr><tr><td style="text-align:left">仓库</td><td style="text-align:left">https://github.com/1281227309-art/shangjiu</td></tr><tr><td style="text-align:left">在线体验</td><td style="text-align:left">https://1281227309-art.github.io/shangjiu/</td></tr><tr><td style="text-align:left">Glama 收录</td><td style="text-align:left">https://glama.ai/mcp/servers/1281227309-art/shangjiu</td></tr></tbody></table></div>
+<hr />
+<h2 id="s2-目录">目录</h2>
+<ol><li><a href="#1-它是什么--解决什么问题">它是什么 / 解决什么问题</a></li><li><a href="#2-快速开始3-种接入路径">快速开始（3 种接入路径）</a></li><li><a href="#3-9-个工具详解">9 个工具详解（参数 + 示例）</a></li><li><a href="#4-典型使用路径按场景">典型使用路径（按场景）</a></li><li><a href="#5-数据层与可信度规则">数据层与可信度规则</a></li><li><a href="#6-共建路径">共建路径（品鉴漏斗 + 复核管线）</a></li><li><a href="#7-项目结构与命令速查">项目结构 &amp; 命令速查</a></li><li><a href="#8-常见问题排查">常见问题排查</a></li></ol>
+<hr />
+<h2 id="s3-1-它是什么-解决什么问题">1. 它是什么 / 解决什么问题</h2>
+<p>「上九蒸馏所」做的一件事：<strong>把中国威士忌讲清楚，并让 AI 能讲真话</strong>。</p>
+<p>它是<strong>国威知识中枢对外的蒸馏出口 + 品鉴数据漏斗</strong>。核心设计：</p>
+<ul><li><strong>薄插件</strong>：走标准 MCP 协议，接入任意 AI 宿主即用（Trae / Cursor / Claude Desktop…），不做独立 App。</li><li><strong>诚实数据</strong>：每个字段带可信度标注（✅已核实 / 🟡待厂方确认 / ⬜待采集），<strong>不编造品鉴笔记与价格</strong>。</li><li><strong>数据漏斗</strong>：<code>submit_tasting_note</code> 采集真人品鉴（AI 只收集、不判断），经复核后才可能进知识库。</li></ul>
+<blockquote><p>一句话：意义不是「更聪明的 AI」，而是<strong>让 AI 在讲中国威士忌时，说的都是真话</strong>。</p></blockquote>
+<hr />
+<h2 id="s4-2-快速开始-3-种接入路径">2. 快速开始（3 种接入路径）</h2>
+<h3 id="s5-路径-A-任意支持-MCP-的客户端-通用-stdio-配置">路径 A：任意支持 MCP 的客户端（通用 stdio 配置）</h3>
+<p>在宿主的 MCP 配置里加：</p>
+<pre><code class="lang-json">{
+  "mcpServers": {
+    "shangjiu-guowei": {
+      "command": "node",
+      "args": ["&lt;项目绝对路径&gt;/src/index.ts"]
+    }
+  }
+}</code></pre>
+<blockquote><p>若宿主里「裸 <code>node</code> 找不到」，把 <code>command</code> 换成项目自带的启动脚本：
+<code>"command": "&lt;项目绝对路径&gt;/run-mcp.sh"</code>，<code>args</code> 留空 <code>[]</code>。</p></blockquote>
+<h3 id="s6-路径-B-Cursor">路径 B：Cursor</h3>
+<p><code>~/.cursor/mcp.json</code>（或项目 <code>.mcp.json</code>）：</p>
+<pre><code class="lang-json">{
+  "mcpServers": {
+    "shangjiu-guowei": {
+      "command": "&lt;项目绝对路径&gt;/run-mcp.sh",
+      "args": []
+    }
+  }
+}</code></pre>
+<h3 id="s7-路径-C-Claude-Desktop-一键接入">路径 C：Claude Desktop（一键接入）</h3>
+<pre><code class="lang-bash">bash scripts/install-claude-config.sh</code></pre>
+<p>脚本会把 <code>mcpServers.shangjiu-guowei</code> 合并进 <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>， 并自动填入项目绝对路径。之后<strong>完全退出并重启 Claude Desktop</strong> 即可调用。</p>
+<h3 id="s8-本地启动-免宿主验证">本地启动 / 免宿主验证</h3>
+<pre><code class="lang-bash">cd 上九国威知识库-mcp
+npm install          # 或 pnpm install
+
+npm start            # 启动 MCP 服务器（Node 原生直跑 src/index.ts）
+npm run dev          # --watch 开发模式
+npm run demo         # 免 npm 演示全部工具输出（含品鉴漏斗落盘）
+npm run review       # 品鉴数据复核管线
+npm run typecheck    # tsc --noEmit 类型检查</code></pre>
+<blockquote><p>服务器走 <strong>stdio</strong>，启动后无界面，等宿主调用。日志输出到 <strong>stderr</strong>，不污染协议通道。</p></blockquote>
+<hr />
+<h2 id="s9-3-9-个工具详解">3. 9 个工具详解</h2>
+<h3 id="s10-3-1-list_regions-产区图谱">3.1 <code>list_regions</code> —— 产区图谱</h3>
+<p><strong>参数</strong>：无</p>
+<p>返回中国威士忌产区的<strong>萌芽体系</strong>（当前 10 个）：</p>
+<div class="tw"><table><thead><tr><th style="text-align:left">产区 code</th><th style="text-align:left">产区</th><th style="text-align:left">省份</th><th style="text-align:left">一句话</th></tr></thead><tbody><tr><td style="text-align:left"><code>qionglai</code></td><td style="text-align:left">邛崃</td><td style="text-align:left">四川</td><td style="text-align:left">川酒重镇，威士忌产能集聚地（崃州）</td></tr><tr><td style="text-align:left"><code>emeishan</code></td><td style="text-align:left">峨眉山</td><td style="text-align:left">四川</td><td style="text-align:left">生态产区（叠川 / 保乐力加）</td></tr><tr><td style="text-align:left"><code>qiandaohu</code></td><td style="text-align:left">千岛湖</td><td style="text-align:left">浙江</td><td style="text-align:left">水源型产区，行业团体标准立项地</td></tr><tr><td style="text-align:left"><code>dali</code></td><td style="text-align:left">大理</td><td style="text-align:left">云南</td><td style="text-align:left">高海拔产区（云拓 / 帝亚吉欧）</td></tr><tr><td style="text-align:left"><code>dianxi</code></td><td style="text-align:left">滇西（横断山带）</td><td style="text-align:left">云南</td><td style="text-align:left">东方风味试验最密集区域（无量山茶桶、巍山本土木种）</td></tr><tr><td style="text-align:left"><code>guangdong</code></td><td style="text-align:left">广东产区带</td><td style="text-align:left">广东</td><td style="text-align:left">大湾区+粤东北：大芹、觀橡、太瓏釀</td></tr><tr><td style="text-align:left"><code>shandong</code></td><td style="text-align:left">胶东半岛</td><td style="text-align:left">山东</td><td style="text-align:left">环渤海产区带（烟台、蓬莱）</td></tr><tr><td style="text-align:left"><code>bozhou</code></td><td style="text-align:left">亳州</td><td style="text-align:left">安徽</td><td style="text-align:left">淮北平原，毗邻中华药都（草本资源）</td></tr><tr><td style="text-align:left"><code>xizang</code></td><td style="text-align:left">青藏高原</td><td style="text-align:left">西藏</td><td style="text-align:left">极端高海拔，青稞等本土谷物</td></tr><tr><td style="text-align:left"><code>liuyang</code></td><td style="text-align:left">浏阳（湘东）</td><td style="text-align:left">湖南</td><td style="text-align:left">大围山冰川湖泊群水源（高朗）</td></tr></tbody></table></div>
+<h3 id="s11-3-2-list_distilleries-酒厂列表">3.2 <code>list_distilleries</code> —— 酒厂列表</h3>
+<p><strong>参数</strong>：<code>region</code>（可选，产区 code，如 <code>qionglai</code>）</p>
+<p>返回酒厂精简列表（id / 名称 / 产区 / 地点 / 背景 / 定位 / 可信度 / 来源）。 不传 <code>region</code> 则返回全部（当前 <strong>14 家</strong>）。</p>
+<h3 id="s12-3-3-get_distillery-酒厂完整档案">3.3 <code>get_distillery</code> —— 酒厂完整档案</h3>
+<p><strong>参数</strong>：<code>id</code>（必填，酒厂 id）</p>
+<p>返回完整档案：产区、工艺（<code>process</code>）、风土（<code>terroir</code>）、风味（<code>flavor</code>）、产品线、可信度，并附<strong>诚实声明</strong>。</p>
+<p><strong>当前可用的 14 个酒厂 id</strong>：</p>
+<div class="tw"><table><thead><tr><th style="text-align:left">id</th><th style="text-align:left">名称</th><th style="text-align:left">产区 code</th><th style="text-align:left">可信度</th></tr></thead><tbody><tr><td style="text-align:left"><code>daqin</code></td><td style="text-align:left">大芹</td><td style="text-align:left"><code>guangdong</code></td><td style="text-align:left">✅ verified</td></tr><tr><td style="text-align:left"><code>laizhou</code></td><td style="text-align:left">崃州</td><td style="text-align:left"><code>qionglai</code></td><td style="text-align:left">✅ verified</td></tr><tr><td style="text-align:left"><code>diechuan</code></td><td style="text-align:left">叠川</td><td style="text-align:left"><code>emeishan</code></td><td style="text-align:left">✅ verified</td></tr><tr><td style="text-align:left"><code>yuntuo</code></td><td style="text-align:left">云拓</td><td style="text-align:left"><code>dali</code></td><td style="text-align:left">✅ verified</td></tr><tr><td style="text-align:left"><code>gaolang</code></td><td style="text-align:left">高朗（Goalong）</td><td style="text-align:left"><code>liuyang</code></td><td style="text-align:left">✅ verified</td></tr><tr><td style="text-align:left"><code>lunbuka</code></td><td style="text-align:left">伦布卡（无量川）</td><td style="text-align:left"><code>dianxi</code></td><td style="text-align:left">🟡 pending</td></tr><tr><td style="text-align:left"><code>lingyun</code></td><td style="text-align:left">凌酝</td><td style="text-align:left"><code>dianxi</code></td><td style="text-align:left">🟡 pending</td></tr><tr><td style="text-align:left"><code>yunsuozhi</code></td><td style="text-align:left">云之所</td><td style="text-align:left"><code>dianxi</code></td><td style="text-align:left">🟡 pending</td></tr><tr><td style="text-align:left"><code>guanxiang</code></td><td style="text-align:left">觀橡（顺昌源）</td><td style="text-align:left"><code>guangdong</code></td><td style="text-align:left">🟡 pending</td></tr><tr><td style="text-align:left"><code>tailongniang</code></td><td style="text-align:left">太瓏釀（珍珠红）</td><td style="text-align:left"><code>guangdong</code></td><td style="text-align:left">🟡 pending</td></tr><tr><td style="text-align:left"><code>jisiboer</code></td><td style="text-align:left">吉斯波尔</td><td style="text-align:left"><code>shandong</code></td><td style="text-align:left">🟡 pending</td></tr><tr><td style="text-align:left"><code>yuzhijin</code></td><td style="text-align:left">钰之锦</td><td style="text-align:left"><code>shandong</code></td><td style="text-align:left">🟡 pending</td></tr><tr><td style="text-align:left"><code>guqi</code></td><td style="text-align:left">古奇（古井贡 × 卡慕）</td><td style="text-align:left"><code>bozhou</code></td><td style="text-align:left">🟡 pending</td></tr><tr><td style="text-align:left"><code>alajiaobao</code></td><td style="text-align:left">阿拉嘉宝 / 香格里拉</td><td style="text-align:left"><code>xizang</code></td><td style="text-align:left">🟡 pending</td></tr></tbody></table></div>
+<blockquote><p>示例：<code>get_distillery(id: "daqin")</code></p></blockquote>
+<h3 id="s13-3-4-get_flavor_profile-风味图谱">3.4 <code>get_flavor_profile</code> —— 风味图谱</h3>
+<p><strong>参数</strong>：<code>distilleryId</code>（必填）</p>
+<p>返回主导风味词 + 官方/社区来源 + 工艺。<strong>主导风味词来自真人盲品聚合</strong>；未聚合前标注「待聚合」，不得当作权威结论。</p>
+<h3 id="s14-3-5-list_products-产品线与价格带">3.5 <code>list_products</code> —— 产品线与价格带</h3>
+<p><strong>参数</strong>：<code>distilleryId</code>（必填）</p>
+<p>返回产品列表（名称 / 桶型 / 档位 / 价格带 / 可信度），并附<strong>行业价格锚点</strong>：</p>
+<blockquote><p>崃州主力 <strong>100–400 元</strong>（口粮档）；叠川 <strong>888 元</strong>（高端锚点）。</p></blockquote>
+<p>价格未核实的会标为「待确认」。</p>
+<h3 id="s15-3-6-search_whisky-全库检索">3.6 <code>search_whisky</code> —— 全库检索</h3>
+<p><strong>参数</strong>：<code>query</code>（必填，检索词）</p>
+<p>在库内匹配 <strong>酒厂名 / 产区 / 风格 / 主导风味词 / 故事</strong>。</p>
+<p><strong>常用检索词</strong>：<code>东方</code>、<code>茶</code>、<code>青稞</code>、<code>橡木</code>、<code>米酿</code>、<code>草本</code>、<code>高海拔</code>、<code>烟熏</code>、<code>果香</code>、<code>风味桶</code></p>
+<blockquote><p>示例：<code>search_whisky(query: "东方")</code> → 返回所有走东方风味路线的厂。</p></blockquote>
+<h3 id="s16-3-7-recommend_whisky-选酒导购">3.7 <code>recommend_whisky</code> —— 选酒导购</h3>
+<p><strong>参数</strong>（均可选）：</p>
+<ul><li><code>budget</code>：价格偏好，如 <code>"100-300"</code>、<code>"口粮"</code>、<code>"高端"</code>、<code>"500 以内"</code></li><li><code>taste</code>：风味偏好，如 <code>"果香"</code>、<code>"茶韵"</code>、<code>"甜"</code>、<code>"烟熏"</code>、<code>"清爽"</code></li><li><code>occasion</code>：场景，如 <code>"日常口粮"</code>、<code>"送礼"</code>、<code>"品鉴/尝东方特色"</code></li></ul>
+<p><strong>打分逻辑</strong>（代码内的真实算法）：</p>
+<pre><code class="lang-">总分 = 预算分 × 2 + 口味分 + 场景分</code></pre>
+<ul><li><strong>预算分</strong>：预算能覆盖价格带低点 → 3；略超 150 元内 → 2；否则 1</li><li><strong>口味分</strong>：命中风味词组（果香/甜/茶/烟/木/花香/草本/黄酒/风味桶/清爽/浓郁/高海拔）→ 每组 +3</li><li><strong>场景分</strong>：送礼/招待 → 高端档 +3、已核实 +1；品鉴/东方 → 有特色桶型 +3；日常/口粮 → 口粮档 +3、已核实 +1</li></ul>
+<p>返回 <strong>Top 5</strong> 排序结果，每条含：酒厂、产品、产区、档位、价格带、可信度、风味、推荐理由、分数，并附 <code>honesty_notice</code>。</p>
+<blockquote><p>示例：<code>recommend_whisky(budget: "200", taste: "果香", occasion: "日常口粮")</code></p></blockquote>
+<h3 id="s17-3-8-generate_content-内容生成">3.8 <code>generate_content</code> —— 内容生成</h3>
+<p><strong>参数</strong>：</p>
+<ul><li><code>topic</code>（必填）：主题，如 <code>"东方风味国产威士忌"</code></li><li><code>format</code>（必填，枚举）：<strong><code>长文</code> | <code>小红书</code> | <code>短视频</code> | <code>选题</code></strong></li><li><code>focus</code>（可选）：酒厂 / 产区 / 风味关键词</li></ul>
+<p>从知识库取<strong>真实数据</strong>填充内容骨架，并返回：</p>
+<ul><li><code>knowledge</code>：命中的酒厂 / 产区</li><li><code>title</code> / <code>content</code> / <code>cta</code></li><li><code>facts_used</code>：用到的真实事实</li><li><code>todo</code>：<strong>待核 / 待采集清单</strong></li><li><code>honesty_notice</code>：诚实声明</li></ul>
+<p><strong>四种格式的差异</strong>：</p>
+<div class="tw"><table><thead><tr><th style="text-align:left">format</th><th style="text-align:left">产出</th></tr></thead><tbody><tr><td style="text-align:left"><code>选题</code></td><td style="text-align:left">5 条标题备选（含产区地图式、追问式、工具背书式）</td></tr><tr><td style="text-align:left"><code>长文</code></td><td style="text-align:left">含「产区速览 / 值得关注 / 怎么选」的长文骨架</td></tr><tr><td style="text-align:left"><code>小红书</code></td><td style="text-align:left">带 emoji、话题标签的短文案（#国产威士忌 等）</td></tr><tr><td style="text-align:left"><code>短视频</code></td><td style="text-align:left">约 1 分钟口播脚本（含时间轴：钩子 / 产区 / 风味 / 怎么选 / 结尾）</td></tr></tbody></table></div>
+<blockquote><p>示例：<code>generate_content(topic: "东方风味", format: "小红书")</code></p></blockquote>
+<h3 id="s18-3-9-submit_tasting_note-品鉴笔记漏斗">3.9 <code>submit_tasting_note</code> —— 品鉴笔记漏斗</h3>
+<p><strong>参数</strong>：</p>
+<div class="tw"><table><thead><tr><th style="text-align:left">参数</th><th style="text-align:left">必填</th><th style="text-align:left">说明</th></tr></thead><tbody><tr><td style="text-align:left"><code>distilleryId</code></td><td style="text-align:left">✅</td><td style="text-align:left">酒厂 id</td></tr><tr><td style="text-align:left"><code>product</code></td><td style="text-align:left"></td><td style="text-align:left">产品名</td></tr><tr><td style="text-align:left"><code>score</code></td><td style="text-align:left"></td><td style="text-align:left">个人评分 0–100</td></tr><tr><td style="text-align:left"><code>nose</code></td><td style="text-align:left"></td><td style="text-align:left">闻香</td></tr><tr><td style="text-align:left"><code>palate</code></td><td style="text-align:left"></td><td style="text-align:left">口感</td></tr><tr><td style="text-align:left"><code>finish</code></td><td style="text-align:left"></td><td style="text-align:left">余韵</td></tr><tr><td style="text-align:left"><code>taster</code></td><td style="text-align:left"></td><td style="text-align:left">品鉴者 / 来源</td></tr><tr><td style="text-align:left"><code>source</code></td><td style="text-align:left"></td><td style="text-align:left">来源：盲品会 / 社群 / 个人</td></tr></tbody></table></div>
+<p><strong>行为</strong>：校验酒厂存在 → 生成 <code>note_xxx</code> 记录（状态一律 <code>pending_review</code>）→ 追加写入 <code>data/tasting-input.jsonl</code>。</p>
+<p><strong>明确边界</strong>：本工具<strong>不据此给出任何权威评分或结论</strong>；仅采信真人来源；可信数据经真人复核后，才可能进入知识库。</p>
+<hr />
+<h2 id="s19-4-典型使用路径-按场景">4. 典型使用路径（按场景）</h2>
+<h3 id="s20-场景-1-我做内容-想找-东方风味-的厂和选题">场景 1：我做内容，想找「东方风味」的厂和选题</h3>
+<pre><code class="lang-">① search_whisky(query: "东方")        → 找出走东方风味路线的厂
+② generate_content(topic: "东方风味国产威士忌", format: "选题")
+   → 拿到 5 条标题 + facts_used + todo（待核清单）
+③ generate_content(topic: "东方风味", format: "小红书")
+   → 拿到可直接改写的短文案骨架</code></pre>
+<h3 id="s21-场景-2-有人问我-200-元内-果香-日常喝的国产威士忌">场景 2：有人问我「200 元内、果香、日常喝的国产威士忌」</h3>
+<pre><code class="lang-">① recommend_whisky(budget: "200", taste: "果香", occasion: "日常口粮")
+   → Top 5 打分推荐 + 推荐理由 + 诚实声明
+② list_products(distilleryId: "&lt;推荐第一名 id&gt;")
+   → 看该厂完整产品线与价格带（含行业锚点）</code></pre>
+<h3 id="s22-场景-3-我要写某家厂的深度稿">场景 3：我要写某家厂的深度稿</h3>
+<pre><code class="lang-">① get_distillery(id: "laizhou")        → 完整档案（工艺/风土/产品/可信度）
+② get_flavor_profile(distilleryId: "laizhou")  → 风味图谱（主导词 + 来源）
+③ list_products(distilleryId: "laizhou")       → 产品线与价格带
+④ generate_content(topic: "崃州", format: "长文", focus: "邛崃")
+   → 用真实数据生成长文骨架</code></pre>
+<h3 id="s23-场景-4-我想了解整个国产威士忌版图">场景 4：我想了解整个国产威士忌版图</h3>
+<pre><code class="lang-">① list_regions()                        → 10 个产区萌芽体系
+② list_distilleries()                   → 全部 14 家酒厂
+③ list_distilleries(region: "dianxi")   → 只看滇西（东方风味最密集）</code></pre>
+<h3 id="s24-场景-5-我喝了一支-想贡献数据-共建">场景 5：我喝了一支，想贡献数据（共建）</h3>
+<pre><code class="lang-">① submit_tasting_note(
+     distilleryId: "daqin",
+     product: "大芹双桶",
+     score: 90,
+     nose: "果香浓郁",
+     palate: "…",
+     finish: "余韵悠长",
+     taster: "你的名字",
+     source: "个人"
+   )
+   → 返回 accepted: true + reference: "note_xxx"（状态 pending_review）
+
+② 终端走复核管线：
+   node scripts/review.mjs list
+   node scripts/review.mjs approve &lt;id&gt; &lt;reviewer&gt;</code></pre>
+<hr />
+<h2 id="s25-5-数据层与可信度规则">5. 数据层与可信度规则</h2>
+<h3 id="s26-数据模型">数据模型</h3>
+<pre><code class="lang-">产区(Region) → 酒厂(Distillery) → 产品(Product)</code></pre>
+<p>每个字段带 <code>source</code>（来源）与 <code>confidence</code>（可信度）。</p>
+<h3 id="s27-可信度三档">可信度三档</h3>
+<div class="tw"><table><thead><tr><th style="text-align:left">标注</th><th style="text-align:left">含义</th></tr></thead><tbody><tr><td style="text-align:left">✅ <code>verified</code></td><td style="text-align:left">已核实（可引用）</td></tr><tr><td style="text-align:left">🟡 <code>pending</code></td><td style="text-align:left">待厂方确认（不谈结论）</td></tr><tr><td style="text-align:left">⬜ <code>unverified</code></td><td style="text-align:left">待采集（不谈结论）</td></tr></tbody></table></div>
+<h3 id="s28-诚实守则-必须遵守">诚实守则（必须遵守）</h3>
+<ul><li><strong>不编造</strong>：品鉴笔记、价格、工艺细节，凡无一手来源一律留空标注。</li><li><strong>AI 只整理不判断</strong>：AI 做归并、可视化、追踪；不做主观品鉴结论。</li><li><strong>出处可查</strong>：每个字段带 <code>source</code> 与 <code>confidence</code>。</li><li><strong>待采即待采</strong>：标注 ⬜ 的，不等厂方确认不作结论。</li></ul>
+<hr />
+<h2 id="s29-6-共建路径">6. 共建路径</h2>
+<h3 id="s30-数据流-真实数据-才进知识库">数据流（真实数据 → 才进知识库）</h3>
+<pre><code class="lang-">真人品鉴 / 厂方一手信息
+        │  submit_tasting_note（AI 只收集，不判断）
+        ▼
+   品鉴数据池  data/tasting-input.jsonl   （状态: pending_review）
+        │  scripts/review.mjs：list / approve / reject / report
+        ▼
+   curated  data/tasting-approved.json    （真人复核通过）
+        │  人工判断
+        ▼
+   进入知识库  src/data.ts                （带 source + confidence）</code></pre>
+<h3 id="s31-三种共建方式">三种共建方式</h3>
+<div class="tw"><table><thead><tr><th style="text-align:left">类型</th><th style="text-align:left">怎么做</th></tr></thead><tbody><tr><td style="text-align:left"><strong>提交品鉴</strong></td><td style="text-align:left">在宿主里调 <code>submit_tasting_note</code>，或直接 <code>node scripts/review.mjs</code> 走复核</td></tr><tr><td style="text-align:left"><strong>补充/更正数据</strong></td><td style="text-align:left">给 <code>src/data.ts</code> 提 PR（新增酒厂/产区/产品、补核价格、更正错误）。<strong>每条必须带来源</strong>，<code>confidence</code> 如实标注</td></tr><tr><td style="text-align:left"><strong>厂方共建</strong></td><td style="text-align:left">面向新国威小厂：帮它们「把'你是谁'定义成标准 + 给声量」，换回一手数据与内容授权</td></tr></tbody></table></div>
+<h3 id="s32-提交流程">提交流程</h3>
+<pre><code class="lang-bash">git clone https://github.com/1281227309-art/shangjiu.git
+cd shangjiu
+git checkout -b feat/your-change
+# 改数据/代码（见 CONTRIBUTING.md）
+node scripts/demo.mjs        # 跑业务层，看 9 工具输出是否正常
+npm run typecheck            # tsc --noEmit，必须通过
+git add -A
+git commit -m "data: 新增 xx 酒厂（附来源）"
+git push origin feat/your-change
+# → 到 GitHub 提 Pull Request</code></pre>
+<hr />
+<h2 id="s33-7-项目结构与命令速查">7. 项目结构与命令速查</h2>
+<pre><code class="lang-">上九国威知识库-mcp/
+├── package.json
+├── tsconfig.json
+├── LICENSE
+├── README.md
+├── CONTRIBUTING.md               # 贡献者发布指南
+├── run-mcp.sh                    # 一键启动脚本（规避命令路径问题）
+├── claude_desktop_config.example.json
+├── landing.html / landing-single.html   # 落地页
+├── src/
+│   ├── data.ts        # 国威知识库（纯数据 + 类型，无外部依赖）
+│   ├── tools.ts       # 业务逻辑层（纯函数，无 MCP SDK）
+│   └── index.ts       # MCP 服务器（薄封装，stdio）
+├── scripts/
+│   ├── demo.mjs        # 免 npm 演示所有工具
+│   ├── review.mjs      # 品鉴数据复核管线
+│   ├── host-demo.mjs   # 真实宿主演示（官方 SDK Client）
+│   ├── install-claude-config.sh  # 一键接入 Claude Desktop
+│   └── mcp-probe.mjs   # 端到端协议探针
+└── data/
+    ├── host-scenario.jsonl   # 管道演示会话
+    └── probe-requests.jsonl  # 探针会话</code></pre>
+<h3 id="s34-命令速查">命令速查</h3>
+<div class="tw"><table><thead><tr><th style="text-align:left">命令</th><th style="text-align:left">作用</th></tr></thead><tbody><tr><td style="text-align:left"><code>npm start</code></td><td style="text-align:left">启动 MCP 服务器（stdio）</td></tr><tr><td style="text-align:left"><code>npm run dev</code></td><td style="text-align:left">开发模式（--watch）</td></tr><tr><td style="text-align:left"><code>npm run demo</code></td><td style="text-align:left">演示全部工具输出</td></tr><tr><td style="text-align:left"><code>npm run review</code></td><td style="text-align:left">品鉴数据复核管线</td></tr><tr><td style="text-align:left"><code>npm run typecheck</code></td><td style="text-align:left">类型检查（<code>tsc --noEmit</code>）</td></tr><tr><td style="text-align:left">`cat data/host-scenario.jsonl \</td><td style="text-align:left">node src/index.ts`</td></tr><tr><td style="text-align:left"><code>node scripts/mcp-probe.mjs</code></td><td style="text-align:left">端到端协议探针（需标准 node）</td></tr></tbody></table></div>
+<hr />
+<h2 id="s35-8-常见问题排查">8. 常见问题排查</h2>
+<h3 id="s36-Q1-宿主报-找不到-node-或路径出错">Q1：宿主报「找不到 node」或路径出错</h3>
+<p>把 <code>command</code> 换成项目自带的启动脚本 <code>&lt;项目绝对路径&gt;/run-mcp.sh</code>，<code>args</code> 留空。</p>
+<h3 id="s37-Q2-服务器启动了但宿主没反应">Q2：服务器启动了但宿主没反应</h3>
+<ul><li>确认走的是 <strong>stdio</strong>（不是 HTTP）；</li><li>确认日志在 <strong>stderr</strong>（不能污染 stdout 协议通道）；</li><li>用探针验证：<code>node scripts/mcp-probe.mjs</code>，或管道喂一组合法 JSON-RPC。</li></ul>
+<h3 id="s38-Q3-get_distillery-返回-未找到酒厂">Q3：<code>get_distillery</code> 返回「未找到酒厂」</h3>
+<p>用返回体里的 <code>available</code> 字段列出的 id 之一（见本文 3.3 的 id 表）。</p>
+<h3 id="s39-Q4-价格-风味是-待确认-待聚合">Q4：价格/风味是「待确认/待聚合」</h3>
+<p>这是<strong>设计如此</strong>，不是 bug。知识库坚持不编造——标 🟡/⬜ 的字段以官方渠道或厂方为准。</p>
+<h3 id="s40-Q5-submit_tasting_note-返回落盘失败">Q5：<code>submit_tasting_note</code> 返回落盘失败</h3>
+<p>记录已通过校验，但本地写入 <code>data/tasting-input.jsonl</code> 失败（如权限/路径问题）。不影响知识库本身，修好写权限后重试。</p>
+<h3 id="s41-Q6-需要-Node-版本">Q6：需要 Node 版本？</h3>
+<p><strong>≥ 22</strong>。项目用 Node 原生类型剥离直接跑 <code>.ts</code>，无需构建步骤。</p>
+<hr />
+<h2 id="s42-附-对话示例-真实宿主里的提问-工具调用">附：对话示例（真实宿主里的提问 → 工具调用）</h2>
+<div class="tw"><table><thead><tr><th style="text-align:left">你的提问</th><th style="text-align:left">工具被调用</th></tr></thead><tbody><tr><td style="text-align:left">「查一下国产威士忌有哪些东方风味的厂」</td><td style="text-align:left"><code>search_whisky("东方")</code></td></tr><tr><td style="text-align:left">「帮我挑一支 200 元内、果香、日常喝的国产威士忌」</td><td style="text-align:left"><code>recommend_whisky(budget:200, taste:果香, occasion:日常口粮)</code></td></tr><tr><td style="text-align:left">「写一篇<strong>东方风味</strong>主题的小红书」</td><td style="text-align:left"><code>generate_content(topic:东方风味, format:小红书)</code></td></tr><tr><td style="text-align:left">「我喝了大芹双桶，记一条品鉴：果香浓郁、余韵悠长、90 分」</td><td style="text-align:left"><code>submit_tasting_note(...)</code> → 落盘 <code>pending_review</code></td></tr></tbody></table></div>
+<p><strong>已验证的返回效果</strong>（Trae 实测）：模型会先调用工具、返回知识库的真实数据，并诚实标注——</p>
+<blockquote><p>「数据来源：上九国威知识库 …价格带整体处于待采集状态，知识库目前的行业锚点是——崃州主力 100–400 元（口粮档）、叠川 888 元（高端锚点）。」</p></blockquote>
+<hr />
+<h2 id="s43-License">License</h2>
+<p>MIT —— 见 <a href="./LICENSE">LICENSE</a>。欢迎自由使用、修改、再分发；引用数据时请保持出处标注。</p>
+<blockquote><p>本文档由项目实际代码（<code>src/index.ts</code>、<code>src/tools.ts</code>、<code>src/data.ts</code>）核对生成，数据（10 产区 / 14 酒厂 / 9 工具）与代码一致。</p></blockquote>
+    </article>
+  </main>
+
+  <footer>
+    <span>© 上九蒸馏所 · 国威知识库 ｜ MIT</span>
+    <span>
+      <a href="landing.html">主页</a>
+      <a href="factory.html">厂家共建</a>
+      <a href="https://github.com/1281227309-art/shangjiu">GitHub</a>
+      <a href="https://glama.ai/mcp/servers/1281227309-art/shangjiu">Glama</a>
+    </span>
+  </footer>
+</div>
+</body>
+</html>
