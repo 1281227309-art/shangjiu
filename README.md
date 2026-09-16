@@ -46,7 +46,9 @@
   <a href="./LICENSE">License</a> ·
   <a href="https://github.com/1281227309-art/shangjiu/fork">Fork</a> ·
   <a href="https://1281227309-art.github.io/shangjiu/">🌏 在线落地页</a> ·
-  <a href="./china_whisky_map.html">🗺️ 产区图谱</a>
+  <a href="./china_whisky_map.html">🗺️ 产区图谱</a> ·
+  <a href="https://1281227309-art.github.io/shangjiu/guide.html">📖 使用指南</a> ·
+  <a href="https://1281227309-art.github.io/shangjiu/contributors.html">🏆 贡献者榜</a>
 </p>
 
 ---
@@ -231,6 +233,15 @@ cat data/host-scenario.jsonl | node src/index.ts
 | **bug / 建议** | 开 Issue，说明复现步骤 |
 
 **流程建议**：Fork → 修改 → 提 PR；数据类 PR 请附来源链接，并如实标 `confidence`。我们会用 `scripts/review.mjs` 对品鉴数据做复核；`tsc --noEmit` 通过后方可合入。
+
+### 🏆 贡献者奖励机制
+
+我们为「被复核进库」的贡献者准备了明确的奖励——**只奖励进库的贡献，不奖励提交动作**，这是保护「诚实数据」的前提。
+
+- **[`CONTRIBUTORS.md`](./CONTRIBUTORS.md)** —— 贡献者荣誉榜（谁、贡献了什么）
+- **[`docs/贡献者奖励规则.md`](./docs/贡献者奖励规则.md)** —— 积分、等级徽章、四级奖励（可执行规则）
+- **[`docs/贡献者奖励机制方案.md`](./docs/贡献者奖励机制方案.md)** —— 完整方案（背景、飞轮、路线图、风险）
+- **在线榜单**：[`contributors.html`](https://1281227309-art.github.io/shangjiu/contributors.html)（自动统计更新）
 
 ---
 
