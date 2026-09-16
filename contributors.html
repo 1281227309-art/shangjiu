@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>贡献者榜 · 上九 · 国威知识库</title>
+<meta name="description" content="上九 · 国威知识库 贡献者荣誉榜：每一位让中国威士忌「被讲对」的人。" />
+<style>
+  :root{
+    --bg:#14100b; --bg2:#1c1610; --panel:#201a12;
+    --ink:#f2e9d8; --ink2:#cfc3ad; --muted:#9a8f7d;
+    --gold:#d4a94e; --gold-soft:rgba(212,169,78,.14);
+    --line:rgba(242,233,216,.10); --line-gold:rgba(212,169,78,.28);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:radial-gradient(1200px 600px at 70% -10%, rgba(212,169,78,.10), transparent 60%),
+               radial-gradient(900px 500px at 0% 30%, rgba(184,134,59,.05), transparent 50%), var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:24px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:12px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;border-radius:10px;background:#fff;padding:4px;object-fit:contain;flex:none;border:1px solid var(--line-gold)}
+  .brand b{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-size:18px}
+  .brand span{font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-size:12px;margin-left:4px}
+  nav a{color:var(--ink2);text-decoration:none;font-size:14px;padding:12px 16px;border:1px solid transparent;border-radius:8px;transition:.15s}
+  nav a:hover{color:var(--gold);border-color:var(--line-gold)}
+  .nav-cta{color:var(--gold)!important;border-color:var(--line-gold)!important}
+  .navlinks{display:flex;gap:4px;flex-wrap:wrap}
+
+  header{padding:64px 0 36px;text-align:center}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-family:ui-monospace,Menlo,monospace;font-size:14px;
+          color:var(--gold);letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line-gold);
+          padding:8px 16px;border-radius:999px;background:var(--gold-soft)}
+  .kicker::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+  h1{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-weight:600;font-size:clamp(2rem,5vw,3rem);
+     line-height:1.15;margin:22px 0 14px}
+  h1 em{font-style:normal;color:var(--gold)}
+  .sub{font-size:15px;color:var(--ink2);max-width:640px;margin:0 auto}
+  .sub b{color:var(--ink)}
+
+  .meta{font-family:ui-monospace,Menlo,monospace;color:var(--muted);font-size:12px;margin-top:18px}
+
+  .legend{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:28px 0 8px}
+  .legend span{font-size:13px;color:var(--ink2);padding:7px 14px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.02)}
+  .legend b{color:var(--gold)}
+
+  main{padding:20px 0 64px}
+
+  .row{display:grid;grid-template-columns:56px 1fr auto;gap:16px;align-items:center;
+       background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;transition:.18s}
+  .row:hover{border-color:var(--line-gold);transform:translateY(-2px)}
+  .rank{font-family:Georgia,serif;font-size:26px;color:var(--gold);text-align:center}
+  .row.top .rank{color:var(--gold);text-shadow:0 0 18px rgba(212,169,78,.5)}
+  .who b{font-size:16px;color:var(--ink)}
+  .who .badge{font-size:13px;color:var(--gold);margin-left:8px}
+  .who .types{font-size:12px;color:var(--muted);margin-top:4px}
+  .pts{text-align:right}
+  .pts .n{font-size:20px;font-weight:700;color:var(--gold);font-family:Georgia,serif}
+  .pts .l{font-size:12px;color:var(--muted)}
+
+  .empty{border:1px dashed var(--line-gold);border-radius:var(--radius);padding:60px 20px;text-align:center;color:var(--muted)}
+  .empty b{color:var(--gold);font-family:Georgia,serif;font-size:20px;display:block;margin-bottom:8px}
+
+  footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center}
+  footer a{color:var(--ink2);text-decoration:none;padding:8px 12px;border-radius:8px}
+  footer a:hover{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="brand"><img class="logo" src="assets/logo.jpg" alt="上九" onerror="this.style.display='none'" /><b>上九 · Shangjiu</b><span>国威知识库 MCP</span></div>
+    <div class="navlinks">
+      <a href="landing.html">主页</a>
+      <a href="guide.html">使用指南</a>
+      <a class="nav-cta" href="factory.html">厂家共建</a>
+    </div>
+  </nav>
+
+  <header>
+    <span class="kicker">Hall of Contributors</span>
+    <h1>让中国威士忌<em>「被讲对」</em>的人</h1>
+    <p class="sub">每一位为知识库做出<b>真实、可追溯</b>贡献的人。只记录<b>被复核进库</b>的贡献，不记录提交动作——这保护的是我们最核心的资产：<b>诚实</b>。</p>
+    <div class="meta" id="meta">加载中…</div>
+  </header>
+
+  <div class="legend">
+    <span>🥃 <b>品鉴者</b> 提交真人品鉴</span>
+    <span>📇 <b>数据贡献者</b> 补充/更正数据</span>
+    <span>🛡️ <b>复核者</b> 把守质量</span>
+    <span>📣 <b>传播者</b> 产出内容</span>
+    <span>💻 <b>开发者</b> 代码/文档</span>
+  </div>
+
+  <main id="board"></main>
+
+  <footer>
+    <span>© 上九蒸馏所 · 国威知识库 ｜ MIT</span>
+    <span>
+      <a href="landing.html">主页</a>
+      <a href="guide.html">使用指南</a>
+      <a href="factory.html">厂家共建</a>
+      <a href="https://github.com/1281227309-art/shangjiu">GitHub</a>
+    </span>
+  </footer>
+</div>
+
+<script>
+const TYPE_LABEL = { tasting:"🥃 品鉴", data:"📇 数据", code:"💻 代码", content:"📣 内容" };
+
+async function load(){
+  const board = document.getElementById("board");
+  const meta = document.getElementById("meta");
+  let data;
+  try {
+    const r = await fetch("contributors.json");
+    if (!r.ok) throw new Error("no json");
+    data = await r.json();
+  } catch (e) {
+    board.innerHTML = '<div class="empty"><b>榜单即将上线</b>还没有贡献者统计。<br/>做出第一条真实贡献，名字就会出现在这里。</div>';
+    meta.textContent = "尚未生成 contributors.json";
+    return;
+  }
+  meta.textContent = `共 ${data.total} 位贡献者 · 更新于 ${(data.generatedAt||"").slice(0,10)}`;
+  const list = data.contributors || [];
+  if (!list.length) {
+    board.innerHTML = '<div class="empty"><b>虚位以待</b>做出第一条真实贡献，名字就会出现在这里。</div>';
+    return;
+  }
+  board.innerHTML = list.map((c,i)=>{
+    const types = Object.entries(c.contributions||{}).map(([t,n])=>`${TYPE_LABEL[t]||t}×${n}`).join(" · ");
+    const top = i < 3 ? " top" : "";
+    return `<div class="row${top}">
+      <div class="rank">${c.rank}</div>
+      <div class="who"><b>${esc(c.name)}</b><span class="badge">${c.badge} ${c.level}</span><div class="types">${types}</div></div>
+      <div class="pts"><div class="n">${c.points}</div><div class="l">积分</div></div>
+    </div>`;
+  }).join("");
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+load();
+</script>
+</body>
+</html>
