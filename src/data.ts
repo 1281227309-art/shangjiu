@@ -18,6 +18,7 @@ export interface Product {
   tier: string;          // 定位（口粮 / 中端 / 高端）
   priceBand?: string;    // 价格带（有真实来源才填）
   confidence: Confidence;
+  contributedBy?: string; // 贡献者（GitHub 用户名 / 署名），仅在被复核进库后填
   note?: string;
 }
 
@@ -50,6 +51,7 @@ export interface Distillery {
   style: string;         // 定位标签
   story: string;         // 一句话故事
   source: string;        // 数据来源
+  contributedBy?: string; // 贡献者（GitHub 用户名 / 署名），仅在被复核进库后填
   confidence: Confidence;
   process?: ProcessInfo;
   terroir?: TerroirInfo;
