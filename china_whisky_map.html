@@ -35,7 +35,7 @@
 <body>
 <div class="header">
   <h1>中国威士忌版图 <span>｜ 上九国威知识库</span></h1>
-  <div class="sub">15 家国产威士忌酒厂 · 11 大产区萌芽体系（其中 10 家已有酒厂标注，千岛湖为立项产区）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
+  <div class="sub">16 家国产威士忌酒厂 · 11 大产区萌芽体系（全部产区均已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
 </div>
 <div class="wrap">
   <div id="chart"><div class="map-note">地图加载中…</div></div>
@@ -63,7 +63,8 @@ var pending = [
   { name: "钰之锦 · 山东蓬莱 · 独立", value: [120.857939, 37.776223, 30], id: "yuzhijin" },
   { name: "古奇 · 安徽亳州 · 古井贡×卡慕", value: [115.683257, 33.991547, 35], id: "guqi" },
   { name: "阿拉嘉宝 · 西藏拉萨 · 独立", value: [91.156635, 29.656707, 30], id: "alajiaobao" },
-  { name: "德熙 · 福建龙岩新罗区 · 怡园酒业", value: [117.017000, 25.075000, 30], id: "dexi" }
+  { name: "德熙 · 福建龙岩新罗区 · 怡园酒业", value: [117.017000, 25.075000, 30], id: "dexi" },
+  { name: "淳岸 · 浙江杭州淳安千岛湖 · 奥歌诗丹迪", value: [119.042000, 29.605000, 30], id: "chunan" }
 ];
 var regionMarks = [
   { name: "千岛湖产区", value: [119.02, 29.61], id: "qiandaohu", note: "水源型产区 · 行业团体标准立项地 · 暂无酒厂标注" }
@@ -85,7 +86,8 @@ var distilleries = {
   guqi: { nm: "古奇（古井贡×卡慕）", direction: "草本威士忌", cask: "待核", flavor: "草本 / 药香（待核）", verified: false, region: "亳州产区", meta: "安徽亳州 · 古井贡×卡慕" },
   alajiaobao: { nm: "阿拉嘉宝/香格里拉", direction: "青稞威士忌 · 极端风土", cask: "待核", flavor: "青稞谷物感（待核）", verified: false, region: "青藏高原产区", meta: "西藏拉萨 · 独立" },
   gaolang: { nm: "高朗（Goalong）", direction: "单一麦芽 · 多桶型试验 · 酒旅融合", cask: "酒窖 28 种桶型（波本/中式雪莉/中国白兰地/水楢/泥煤 + 红酒桶）", flavor: "麦芽-柑橘青苹果 / 奶油甜感·烤面包焦香", verified: true, region: "浏阳（湘东）产区", meta: "湖南浏阳 · 高朗烈酒集团" },
-  dexi: { nm: "德熙", direction: "单一麦芽 · 双桶 · 生态产区", cask: "双桶（融萃双桶）", flavor: "待采集", verified: false, region: "闽西（龙岩）产区", meta: "福建龙岩新罗区 · 怡园酒业" }
+  dexi: { nm: "德熙", direction: "单一麦芽 · 双桶 · 生态产区", cask: "双桶（融萃双桶）", flavor: "待采集", verified: false, region: "闽西（龙岩）产区", meta: "福建龙岩新罗区 · 怡园酒业" },
+  chunan: { nm: "淳岸", direction: "单一麦芽 · 外资（英国奥歌诗丹迪）· 工旅融合", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江杭州淳安 · 奥歌诗丹迪集团" }
 };
 var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "浏阳（湘东）产区", "闽西（龙岩）产区", "千岛湖产区"];
 var allMarks = verified.concat(pending).concat(regionMarks);

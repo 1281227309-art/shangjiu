@@ -71,7 +71,7 @@ export interface Region {
 export const REGIONS: Region[] = [
   { id: "qionglai", name: "邛崃", province: "四川", note: "川酒重镇，威士忌产能集聚地，崃州所在地。", distilleryIds: ["laizhou"] },
   { id: "emeishan", name: "峨眉山", province: "四川", note: "生态产区，叠川（保乐力加）所在地。", distilleryIds: ["diechuan"] },
-  { id: "qiandaohu", name: "千岛湖", province: "浙江", note: "水源型产区，行业团体标准立项地。", distilleryIds: [] },
+  { id: "qiandaohu", name: "千岛湖", province: "浙江", note: "水源型产区：2026-09 发布国内首个产区级威士忌团体标准与产区 Logo（森林覆盖率 77.8%），已集聚酒厂 6 家、设计产能 2.03 万吨/年，主打「酒+文旅」。", distilleryIds: ["chunan"] },
   { id: "dali", name: "大理", province: "云南", note: "高海拔产区，云拓（帝亚吉欧）所在地。", distilleryIds: ["yuntuo"] },
   { id: "dianxi", name: "滇西（横断山带）", province: "云南", note: "横断山及余脉产区带：无量山（茶桶）、巍山（本土木种）等，东方风味试验最密集的区域。", distilleryIds: ["lunbuka", "lingyun", "yunsuozhi"] },
   { id: "guangdong", name: "广东产区带", province: "广东", note: "大湾区 + 粤东北：源自福建的大芹、广州的中国橡木專線觀橡、梅州的米酿基因太瓏釀。", distilleryIds: ["daqin", "guanxiang", "tailongniang"] },
@@ -115,19 +115,21 @@ export const DISTILLERIES: Distillery[] = [
     location: "四川邛崃",
     owner: "百润股份",
     style: "主流 · 本土风味突围",
-    story: "国产威士忌绝对主力，大桶容 + 高市占（约六成），主打 100-400 元口粮档。",
-    source: "行业盘点（CWS / 兴业证券）",
+    story: "国产威士忌绝对主力（高市占、大桶容）；2025-06-19 发布 5 款单一麦芽新品，全面覆盖 200–500 元价格带。同集团另有调和品牌「百利得」（22 / 66 流通版，99 / 219 元）。",
+    source: "兴业证券《百润股份》研报（2025-06 / 2026-08）+ 行业盘点（CWS）",
     confidence: "verified",
-    process: { cask: "多桶型体系（含中国加强酒桶 / STR红酒桶 / 波本）", maturation: "中国法律规定威士忌须≥3年陈酿" },
+    process: { cask: "多桶型体系（中式桶为差异化卖点：黄酒桶 / 蒙古栎桶 + STR 红酒桶 / 波本 / 加强酒桶）", maturation: "中国法律规定威士忌须≥3年陈酿" },
     flavor: {
       dominant: ["红苹果-乌龙茶（待聚合）", "李-香草-木烟（待聚合）", "蜂蜜-杏（待聚合）"],
       community: "Whisky Scribe — https://thewhiskyscribe.com/laizhou-distillery-chinese-single-malt-whisky/",
     },
     products: [
-      { name: "崃州系列", cask: "多桶", tier: "口粮-中端", priceBand: "100–400 元", confidence: "verified" },
-      { name: "Finest Select", cask: "多桶·中国加强酒桶", tier: "口粮", confidence: "pending" },
-      { name: "STR Red Wine Cask", cask: "STR红酒·泥煤", tier: "中端", confidence: "pending" },
-      { name: "Bourbon Cask", cask: "波本·泥煤", tier: "中端", confidence: "pending" },
+      { name: "崃州甄选（多桶融合）", cask: "多桶融合", tier: "中端口粮", priceBand: "229 元 / 700ml（40%vol）", confidence: "verified" },
+      { name: "STR 红葡萄酒桶", cask: "STR 红葡萄酒桶", tier: "中端", priceBand: "279 元 / 700ml（46%vol）", confidence: "verified" },
+      { name: "菲诺雪莉桶", cask: "菲诺雪莉桶", tier: "中端", priceBand: "279 元 / 700ml（46%vol）", confidence: "verified" },
+      { name: "泥煤波本", cask: "泥煤波本桶", tier: "中端", priceBand: "339 元 / 700ml（46%vol）", confidence: "verified" },
+      { name: "阿蒙蒂亚雪莉桶桶强", cask: "阿蒙蒂亚雪莉桶（桶强）", tier: "高端", priceBand: "499 元 / 700ml（66%vol）", confidence: "verified" },
+      { name: "创世版（2024-11 限量）", cask: "多桶", tier: "限量", confidence: "verified", note: "试水限量款，已售罄" },
     ],
   },
   {
@@ -137,35 +139,54 @@ export const DISTILLERIES: Distillery[] = [
     location: "四川峨眉山",
     owner: "保乐力加",
     style: "高端 · 生态产区",
-    story: "国际烈酒集团在华高端布局，行业高端价格锚点。",
-    source: "行业盘点（CWS）",
+    story: "保乐力加在华首款中国原产威士忌（2023-12 首发），累计投入逾 10 亿元建峨眉山酒厂与体验中心（如恩设计 Neri&Hu 操刀，含「叠宴」餐厅）；行业高端价格锚点。",
+    source: "新华网（2023-12-13）+ 香港文汇报（2026-06）+ 行业盘点（CWS）",
     confidence: "verified",
     process: {
       still: "双 Forsyth 壶式蒸馏器（20000L 洗酒器 + 14000L 烈酒器）",
-      cask: "波本 + 雪莉 + 中国丹宁橡木（蒙古栎）",
-      maturation: "发酵可达 100h",
+      cask: "三大洲橡木桶：美国波本桶 + 西班牙雪莉桶 + 中国长白山「单岭」橡木桶（叠川独有）",
+      malt: "同时使用来自欧洲与中国的大麦",
+      maturation: "发酵可达 100h；采用「叠式调配法」（官方口径）",
     },
     flavor: {
+      official: "波本桶香草花果香 · 雪莉桶蜜饯甜香 · 单岭桶檀香与陈皮交织的东方尾韵（官方口径）",
       dominant: ["糖浆-棉花糖甜感（待聚合）", "柚木-雪松-薄荷柑橘（待聚合）"],
       community: "Words of Whisky（Thijs 8.3/10）— https://wordsofwhisky.com/the-chuan-pure-malt-whisky-review/",
     },
     products: [
-      { name: "叠川", cask: "待核", tier: "高端", priceBand: "888 元（锚点）", confidence: "verified" },
+      { name: "叠川（纯麦芽）", cask: "三大洲橡木桶", tier: "高端", priceBand: "888 元 / 700ml", confidence: "verified", note: "官方标注 Pure Malt（纯麦芽）；官方未披露是否使用集团旗下其他酒厂原酒" },
+      { name: "烟熏中国单岭桶（麦芽威士忌）", cask: "中国单岭橡木桶（烟熏）", tier: "高端", confidence: "pending", note: "官方称 2027-04 上市（香港文汇报）" },
+      { name: "PX 雪莉桶（麦芽威士忌）", cask: "PX 雪莉桶", tier: "高端", confidence: "pending", note: "官方称 2027-04 上市（香港文汇报）" },
     ],
   },
   {
     id: "yuntuo",
     name: "云拓",
     region: "dali",
-    location: "云南大理",
+    location: "云南大理洱源县（海拔约 2100m）",
     owner: "帝亚吉欧",
-    style: "高端 · 高海拔",
-    story: "帝亚吉欧在华布局，2026 Icons of Whisky China 斩获多项大奖。",
-    source: "行业报道 + 2026 Icons of Whisky China",
+    style: "高端 · 高海拔 · 单一麦芽",
+    story: "帝亚吉欧在中国设立的首座威士忌酒厂（2024-11 落成），依托集团逾 200 年苏格兰酿造经验；2026-08 首闯国际赛事即凭新酒（New Make）摘得 2026 世界威士忌大师赛金奖；首批成品预计 2027 年发布。",
+    source: "周末画报官方稿（2026-08-05）+ 2026 Icons of Whisky China + 行业报道",
     confidence: "verified",
-    flavor: { dominant: ["高海拔 / 风土（行业共识，待聚合）"] },
+    process: {
+      still: "Abercrombie 铜质壶式蒸馏器（慢速蒸馏，回流设计保留轻盈花果香）",
+      malt: "慢速糖化；120 小时超长酵酿",
+      cask: "多种桶型桶陈实验中（具体桶型待采集）",
+      maturation: "首批成品预计 2027 年发布",
+    },
+    terroir: {
+      climate: "滇西高原 · 气候温和、昼夜温差显著",
+      water: "大理洱海源头水系天然泉水「三爷泉」",
+      aging: "洱源县海拔约 2100m 酒厂",
+    },
+    flavor: {
+      official: "新酒以「果香带动花香」为风格骨架（官方口径）",
+      dominant: ["花果香（官方新酒口径，待聚合）"],
+      community: "2026 世界威士忌大师赛（The World Whisky Masters 2026）New Make 类别金奖",
+    },
     products: [
-      { name: "云拓", cask: "待核", tier: "高端", confidence: "pending" },
+      { name: "云拓单一麦芽威士忌（首批成品）", cask: "待采集", tier: "高端", confidence: "pending", note: "预计 2027 年发布" },
     ],
   },
 
@@ -410,6 +431,29 @@ export const DISTILLERIES: Distillery[] = [
       { name: "德熙融萃双桶单一麦芽威士忌", cask: "双桶", tier: "待核", confidence: "pending", note: "2026-05-15 北京威士忌节全国首秀" },
     ],
   },
+
+  /* ---------- 千岛湖批次（来源：杭州日报 / 杭州市政府门户 2026-09-21） ---------- */
+
+  {
+    id: "chunan",
+    name: "淳岸",
+    region: "qiandaohu",
+    location: "浙江杭州淳安 · 千岛湖",
+    owner: "英国奥歌诗丹迪集团（Angus Dundee Distillers）全资",
+    style: "单一麦芽 · 外资 · 工旅融合",
+    story: "英国奥歌诗丹迪集团全资打造，是该集团在英国本土以外唯一的单一麦芽威士忌酒厂，也是千岛湖首个外资工旅融合项目；2026 年 7 月体验中心对外开放，提供沉浸式导览、3D 光影秀与全流程车间参观。",
+    source: "杭州日报 / 杭州市政府门户（2026-09-21）",
+    confidence: "pending",
+    process: { cask: "待采集", still: "待采集" },
+    terroir: { climate: "千岛湖水源型产区（产区森林覆盖率 77.8%）", water: "千岛湖水系（待核）" },
+    flavor: {
+      dominant: ["待采集"],
+      community: "待以真人盲品聚合，AI 不做判断",
+    },
+    products: [
+      { name: "待采集", cask: "待采集", tier: "待核", confidence: "unverified" },
+    ],
+  },
 ];
 
 /* ============================ 产业大盘数据 ============================ */
@@ -489,6 +533,66 @@ export const WHISKY_STANDARD: WhiskyStandard = {
     { topic: "酒龄标示", requirement: "建议标示；酒龄 = 该产品所用原酒的最小酒龄（最短 5 年则标 5 年）。" },
   ],
 };
+
+/* ============ 团体标准：固态酿造谷物威士忌（中式路线） ============ */
+
+export interface GroupStandard {
+  name: string;
+  issuedBy: string;
+  issuedAt: string;
+  source: string;
+  definition: string;
+  keyPoints: string[];
+}
+
+/**
+ * 《固态酿造谷物威士忌》团体标准（2026-06 发布）
+ * 用途：与苏格兰路线并列的「中式威士忌」技术体系，判断酱香型/固态发酵威士忌的依据。
+ */
+export const GROUP_STANDARD_SOLID: GroupStandard = {
+  name: "《固态酿造谷物威士忌》团体标准",
+  issuedBy: "中国轻工业联合会组织，贵州国台数智酒业集团、中国食品发酵工业研究院等共同研制；中国工程院院士孙宝国领衔 9 位专家审查通过",
+  issuedAt: "2026-06",
+  source: "新华财经（2026-09-16，中国轻工业联合会质量标准部主任刘晶晶致辞）",
+  definition:
+    "以高粱、小麦为主要原料，以大曲作为糖化发酵剂，经固态糖化、固态发酵、固态蒸馏、陶坛陈酿、再次蒸馏、木桶陈酿后，经或不经调配，具有独特风格的谷物威士忌。",
+  keyPoints: [
+    "填补我国固态酿造谷物威士忌标准的技术空白，经专家组认定整体达到国际先进水平。",
+    "感官体系引入「粮香」「陈香」「发酵香」等中国烈酒特色词汇，与焦糖香、奶油香、香草香、橡木香结合。",
+    "在 GB/T 11856.1-2025 基础上增设 3 项指标：乙酸乙酯／乳酸乙酯、威士忌内酯、香兰素。",
+    "乙酸乙酯与乳酸乙酯比值设定为不高于 4.0，用以体现固态酿造工艺形成的风味指纹。",
+    "威士忌内酯与香兰素纳入指标，量化橡木桶陈酿带来的橡木香与甜香。",
+    "优级产品高级醇含量不高于每升 5.0 克，严于相关国家标准要求。",
+    "实践范本：国台·尚牌威士忌 —— 天士力大健康产业投资集团与美国 Maritine Brands INC. 联合出品，贵州国台数智酒业技术监制；原酒产自贵州茅台镇，陶坛陈酿后运往美国肯塔基州谢尔比维尔入波本橡木桶熟成。",
+  ],
+};
+
+/* ==================== 产业政策（利好依据） ==================== */
+
+export interface PolicyItem {
+  name: string;
+  issuedAt: string;
+  detail: string;
+}
+
+export const INDUSTRY_POLICIES: PolicyItem[] = [
+  {
+    name: "《酿酒产业提质升级指导意见（2026—2030年）》",
+    issuedAt: "2026-02",
+    detail:
+      "工业和信息化部、人力资源社会保障部、市场监管总局联合印发；明确支持威士忌、白兰地、伏特加等产品本土化发展，鼓励各地挖掘自然风土、历史文化、产品风格等资源禀赋，塑造核心竞争力。",
+  },
+  {
+    name: "威士忌进口税率下调",
+    issuedAt: "近年",
+    detail: "降低进口成本，同时为国产与进口的公平竞争提供环境（中酒协口径）。",
+  },
+  {
+    name: "酒类产业定位调整",
+    issuedAt: "近年",
+    detail: "酒类从过去的「限制性行业」转为国家重点扶持的「历史经典产业」（中酒协口径）。",
+  },
+];
 
 /** 按 id 取酒厂 */
 export function getDistillery(id: string): Distillery | undefined {

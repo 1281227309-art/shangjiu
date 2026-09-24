@@ -15,6 +15,8 @@ import {
   REGIONS,
   INDUSTRY_SNAPSHOT,
   WHISKY_STANDARD,
+  GROUP_STANDARD_SOLID,
+  INDUSTRY_POLICIES,
   getDistillery,
   regionName,
   searchWhisky,
@@ -126,6 +128,8 @@ export function getIndustryFacts() {
   return {
     snapshot: INDUSTRY_SNAPSHOT,
     standard: WHISKY_STANDARD,
+    group_standard: GROUP_STANDARD_SOLID,
+    policies: INDUSTRY_POLICIES,
     credibility_notice:
       "产业数据为行业协会公开发布的调研/统计口径，非审计数据，引用须标注来源与时间；标准要点以国标原文为准，不构成法律意见。",
   };

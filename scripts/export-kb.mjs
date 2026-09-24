@@ -6,7 +6,7 @@
  * 运行：node scripts/export-kb.mjs > ../上九国威知识库_手动录入数据包.md
  */
 
-import { REGIONS, DISTILLERIES, INDUSTRY_SNAPSHOT, WHISKY_STANDARD, regionName } from "../src/data.ts";
+import { REGIONS, DISTILLERIES, INDUSTRY_SNAPSHOT, WHISKY_STANDARD, GROUP_STANDARD_SOLID, INDUSTRY_POLICIES, regionName } from "../src/data.ts";
 
 const C = { verified: "✅已核实", pending: "🟡待厂方确认", unverified: "⬜待采集" };
 const L = [];
@@ -79,7 +79,29 @@ for (const p of WHISKY_STANDARD.points) {
 }
 L.push("");
 
-L.push("## 六、可信度说明");
+L.push(`## 六、团体标准：固态酿造谷物威士忌（中式路线）`);
+L.push("");
+L.push(`> ${GROUP_STANDARD_SOLID.name} ｜ 发布：${GROUP_STANDARD_SOLID.issuedAt}`);
+L.push(`> 制定：${GROUP_STANDARD_SOLID.issuedBy}`);
+L.push(`> 来源：${GROUP_STANDARD_SOLID.source}`);
+L.push("");
+L.push(`**定义**：${GROUP_STANDARD_SOLID.definition}`);
+L.push("");
+for (const k of GROUP_STANDARD_SOLID.keyPoints) {
+  L.push(`- ${k}`);
+}
+L.push("");
+
+L.push("## 七、产业政策（利好依据）");
+L.push("");
+L.push("| 政策 | 时间 | 要点 |");
+L.push("|---|---|---|");
+for (const pol of INDUSTRY_POLICIES) {
+  L.push(`| ${pol.name} | ${pol.issuedAt} | ${pol.detail} |`);
+}
+L.push("");
+
+L.push("## 八、可信度说明");
 L.push("");
 L.push("- ✅ **已核实**：有公开/可靠来源。");
 L.push("- 🟡 **待厂方确认**：基于报道/行业共识，未获厂方一手确认。");
