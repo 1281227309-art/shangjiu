@@ -20,6 +20,7 @@ import {
   getFlavorProfile,
   listProducts,
   searchWhiskyTool,
+  getIndustryFacts,
   submitTastingNote,
   recommendWhisky,
   generateContent,
@@ -74,6 +75,13 @@ server.tool(
   "在国威知识库中检索（匹配酒厂名/产区/风格/主导风味词/故事）",
   { query: z.string().describe("检索词") },
   async ({ query }) => text(searchWhiskyTool(query)),
+);
+
+server.tool(
+  "get_industry_facts",
+  "查中国威士忌产业大盘数据（厂家数/产能/份额/价格带/进出口）与新国标 GB/T 11856.1-2025 合规要点（陈酿年限、单一麦芽、风味威士忌标识等）",
+  {},
+  async () => text(getIndustryFacts()),
 );
 
 server.tool(

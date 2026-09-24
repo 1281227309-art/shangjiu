@@ -13,6 +13,8 @@ import { fileURLToPath } from "node:url";
 import {
   DISTILLERIES,
   REGIONS,
+  INDUSTRY_SNAPSHOT,
+  WHISKY_STANDARD,
   getDistillery,
   regionName,
   searchWhisky,
@@ -114,6 +116,18 @@ export function searchWhiskyTool(query: string) {
     query,
     count: hits.length,
     results: hits.map(summarize),
+  };
+}
+
+/* ------------------- 工具：产业大盘数据 + 新国标 ------------------- */
+
+/** 产业大盘数据与新国标合规要点（供 AI 回答"国产威士忌有多少家""单一麦芽要陈几年"等） */
+export function getIndustryFacts() {
+  return {
+    snapshot: INDUSTRY_SNAPSHOT,
+    standard: WHISKY_STANDARD,
+    credibility_notice:
+      "产业数据为行业协会公开发布的调研/统计口径，非审计数据，引用须标注来源与时间；标准要点以国标原文为准，不构成法律意见。",
   };
 }
 

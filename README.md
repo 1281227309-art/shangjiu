@@ -67,13 +67,14 @@
 
 ---
 
-## 功能亮点（四个标签）
+## 功能亮点（五个标签）
 
 | 标签 | 对应工具 | 价值 |
 |---|---|---|
 | **国威品鉴** | `get_flavor_profile` / `get_distillery` | 查酒厂档案、风味图谱，带可信度 |
 | **选酒导购** | `recommend_whisky` / `list_products` | 预算+口味+场景 → 打分推荐 |
 | **产区图谱** | `list_regions` / `search_whisky` | 产区萌芽体系 + 全库检索 |
+| **产业与法规** | `get_industry_facts` | 产业大盘数据（64 家/7 万千升/份额）+ 新国标 GB/T 11856.1-2025 合规要点 |
 | **内容生成** | `generate_content` / `submit_tasting_note` | 生成内容骨架（选题/长文/小红书/短视频）+ 采集真人品鉴 |
 
 ---

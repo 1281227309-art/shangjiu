@@ -79,6 +79,7 @@ export const REGIONS: Region[] = [
   { id: "bozhou", name: "亳州", province: "安徽", note: "淮北平原，古井贡所在地，毗邻中华药都的草本资源。", distilleryIds: ["guqi"] },
   { id: "xizang", name: "青藏高原", province: "西藏", note: "极端高海拔产区，青稞等本土谷物原料路线。", distilleryIds: ["alajiaobao"] },
   { id: "liuyang", name: "浏阳（湘东）", province: "湖南", note: "湘东产区：大围山（罗霄山脉，海拔 1608m）第四纪冰川高山湖泊群水源，花炮庆典文化加持，高朗所在地。", distilleryIds: ["gaolang"] },
+  { id: "minxi", name: "闽西（龙岩）", province: "福建", note: "武夷山脉南段生态产区：龙岩新罗区小池镇培斜村（国家森林乡村）为德熙所在地；福建亦是大芹品牌的起家地。", distilleryIds: ["dexi"] },
 ];
 
 export const DISTILLERIES: Distillery[] = [
@@ -86,13 +87,14 @@ export const DISTILLERIES: Distillery[] = [
     id: "daqin",
     name: "大芹",
     region: "guangdong",
-    location: "源自福建 · 扎根大湾区（广东）",
+    location: "福建起家 · 广东惠州龙门（永汉镇锦城村）新厂",
     owner: "独立（区域新势力）",
-    style: "单一麦芽 · 东方风味",
-    story: "从福建走向广东的中国单一麦芽代表，主打“东方风味”差异化，与苏格兰 / 台湾威士忌形成区隔。",
-    source: "公开产品页（台湾酒商 / 酒展收录）+ 行业报道",
+    style: "单一麦芽 · 东方风味 · 酒旅/康养融合",
+    story: "中国大陆首家引进苏格兰大型蒸馏设备的酒厂（2007 年建于福建）。2026 年 4 月广东惠州龙门新厂投料试产：总投资 16 亿元、占地 375 亩，达产后年产可达 2 万千升，有望成为全球规模领先的单体单一麦芽威士忌酒厂；2020 年产品上市以来累计斩获 138 项国际烈酒竞赛奖项。",
+    source: "惠州市政府门户 / 惠州日报（2026-04）+ 公开产品页（台湾酒商 / 酒展收录）+ 行业报道",
     confidence: "verified",
-    process: { cask: "波本桶为主 · 含双桶", malt: "国产 / 进口大麦麦芽（待核）" },
+    process: { cask: "波本桶为主 · 含双桶", malt: "国产 / 进口大麦麦芽（待核）", still: "龙门新厂引进先进酿造设备（含大型糖化与自动化控制系统）" },
+    terroir: { climate: "惠州龙门 · 环南昆山—罗浮山带", aging: "龙门新厂（宣称融合温泉康养，打造「美酒+康养」文旅地标）" },
     flavor: {
       dominant: ["东方果香（待聚合）", "波本甜感（待聚合）"],
       community: "待以真人盲品聚合，AI 不做判断",
@@ -382,7 +384,111 @@ export const DISTILLERIES: Distillery[] = [
       { name: "分享瓶 / 多桶型试验系列", cask: "波本 / 雪莉 / 白兰地 / 波特 / 霞多丽 / 长相思 / STR 等", tier: "待核", confidence: "pending" },
     ],
   },
+
+  /* ---------- 闽西批次（来源：中国网海峡频道 / 龙岩市融媒体中心 2026-04） ---------- */
+
+  {
+    id: "dexi",
+    name: "德熙",
+    region: "minxi",
+    location: "福建龙岩新罗区小池镇培斜村",
+    owner: "怡园酒业（港股上市）旗下烈酒项目",
+    style: "单一麦芽 · 双桶 · 生态产区",
+    story: "福建龙岩首家高端威士忌酒厂：占地约 3.8 万㎡、设计年产威士忌 3000 吨，依托「国家森林乡村」培斜村的生态禀赋；首批三年陈酿已通过专业检测、符合上市标准，计划 2026 年下半年投市，填补龙岩高端威士忌酿造产业空白、补强「福酒」品牌矩阵。",
+    source: "中国网海峡频道 / 龙岩市融媒体中心（2026-04）",
+    confidence: "pending",
+    process: {
+      cask: "双桶体系（核心产品「融萃双桶」）",
+      maturation: "首批三年陈酿（2026 年满三年达上市标准）",
+    },
+    terroir: { climate: "闽西 · 武夷山脉南段", water: "培斜村「国家森林乡村」生态禀赋（待核）" },
+    flavor: {
+      dominant: ["待采集"],
+      community: "待以真人盲品聚合，AI 不做判断",
+    },
+    products: [
+      { name: "德熙融萃双桶单一麦芽威士忌", cask: "双桶", tier: "待核", confidence: "pending", note: "2026-05-15 北京威士忌节全国首秀" },
+    ],
+  },
 ];
+
+/* ============================ 产业大盘数据 ============================ */
+
+export interface IndustryMetric {
+  label: string;
+  value: string;
+  note?: string;
+}
+
+export interface IndustrySnapshot {
+  asOf: string;
+  source: string;
+  metrics: IndustryMetric[];
+}
+
+/**
+ * 中国威士忌产业大盘（中国酒业协会 2026-09-19 于千岛湖威士忌嘉年华发布）
+ * 口径说明：属行业协会调研/统计数据，非审计数据；引用时须标注来源与时间。
+ */
+export const INDUSTRY_SNAPSHOT: IndustrySnapshot = {
+  asOf: "2026-09-19",
+  source: "中国酒业协会《中国威士忌产业发展报告》（2026 威士忌文化交流大会暨第三届千岛湖威士忌嘉年华）",
+  metrics: [
+    { label: "生产厂家", value: "64 家", note: "同比增加 9 家" },
+    { label: "实际蒸馏能力", value: "约 7 万千升/年", note: "设计产能 13 万千升；远期规划 30 万千升" },
+    { label: "已投产产值", value: "约 158.5 亿元", note: "远期市场空间超过 200 亿元" },
+    { label: "进口份额", value: "85%", note: "其中英国威士忌 65%，其他进口 20%" },
+    { label: "国产份额", value: "15%", note: "以高增速成为市场不可忽视的变量" },
+    { label: "消费者体验率", value: "85% 体验过国产威士忌", note: "购买转化率 60%（协会调研口径）" },
+    { label: "核心价格带", value: "300–500 元", note: "占市场份额 55%" },
+    { label: "消费城市", value: "一二线合计近八成", note: "北京 / 上海 / 广州 / 苏州 / 深圳等" },
+    { label: "品类结构", value: "麦芽 59% / 谷物 17% / 调和 24%" },
+    { label: "2025 进口", value: "3584 万升（同比 +22.8%）", note: "进口均价 -13.73% → 15.46 美元，呈“量增价跌”" },
+    { label: "2025 出口", value: "1324 万升（同比 +50.8%）", note: "出口均价 7.4 美元（同比 -6%）" },
+    { label: "东方特色桶型", value: "黄酒桶 / 蒙古栎桶 / 烟熏·茶叶润桶" },
+    { label: "行业时间锚点", value: "2026–2027 产品集中上市", note: "中酒协：市场将首次全面检验国产威士忌品质成色" },
+  ],
+};
+
+/* ======================= 威士忌新国标（合规判据） ======================= */
+
+export interface StandardPoint {
+  topic: string;
+  requirement: string;
+}
+
+export interface WhiskyStandard {
+  code: string;
+  name: string;
+  effectiveFrom: string;
+  source: string;
+  points: StandardPoint[];
+}
+
+/**
+ * 威士忌新国标要点（GB/T 11856.1-2025，2026-02-01 实施）
+ * 用途：判断一款产品“是不是威士忌、是哪一类威士忌”的合规判据。
+ */
+export const WHISKY_STANDARD: WhiskyStandard = {
+  code: "GB/T 11856.1-2025",
+  name: "《烈性酒质量要求 第1部分：威士忌》",
+  effectiveFrom: "2026-02-01",
+  source: "国家市场监督管理总局（国家标准化管理委员会）发布；中国消费者报 / 新浪财经 解读",
+  points: [
+    { topic: "定义", requirement: "以谷物为原料，经糖化、发酵、蒸馏、陈酿，经或不经调配而成的蒸馏酒——调配被明确为非必要工艺。" },
+    { topic: "分类（按原料）", requirement: "麦芽威士忌（大麦麦芽为唯一谷物原料，橡木桶陈酿）/ 谷物威士忌。" },
+    { topic: "分类（按工艺）", requirement: "调配威士忌 / 风味威士忌（本次新增类别）。" },
+    { topic: "单一麦芽威士忌", requirement: "同一工厂至少完成糖化、发酵、蒸馏；不得使用外源性酶；橡木桶陈酿不少于 3 年。" },
+    { topic: "单一谷物威士忌", requirement: "在同一工厂至少完成糖化、发酵、蒸馏的谷物威士忌。" },
+    { topic: "陈酿下限", requirement: "原酒陈酿时间不应少于 2 年。" },
+    { topic: "新酒酒精度", requirement: "蒸馏所得威士忌新酒的最高酒精度应小于 95%vol。" },
+    { topic: "禁用物质", requirement: "不得使用食用酒精、呈色物质（焦糖色除外）、呈香呈味物质（风味威士忌除外）。" },
+    { topic: "风味威士忌标识", requirement: "必须在标签明确标示为「风味威士忌」，不得只标「威士忌」；甜味物质超过 5g/L 须标示总糖含量。" },
+    { topic: "橡木片陈酿", requirement: "使用橡木片仍须满足木桶陈酿至少 2 年，且标签须明示使用了橡木片。" },
+    { topic: "谷物命名", requirement: "某一种谷物占比超过 51%（质量分数）可标示为「XX 谷物威士忌」（如高粱谷物威士忌）。" },
+    { topic: "酒龄标示", requirement: "建议标示；酒龄 = 该产品所用原酒的最小酒龄（最短 5 年则标 5 年）。" },
+  ],
+};
 
 /** 按 id 取酒厂 */
 export function getDistillery(id: string): Distillery | undefined {

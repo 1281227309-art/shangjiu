@@ -6,7 +6,7 @@
  * 运行：node scripts/export-kb.mjs > ../上九国威知识库_手动录入数据包.md
  */
 
-import { REGIONS, DISTILLERIES, regionName } from "../src/data.ts";
+import { REGIONS, DISTILLERIES, INDUSTRY_SNAPSHOT, WHISKY_STANDARD, regionName } from "../src/data.ts";
 
 const C = { verified: "✅已核实", pending: "🟡待厂方确认", unverified: "⬜待采集" };
 const L = [];
@@ -54,7 +54,32 @@ for (const d of DISTILLERIES) {
 }
 L.push("");
 
-L.push("## 四、可信度说明");
+L.push("## 四、产业大盘数据（中国酒业协会）");
+L.push("");
+L.push(`> 时间：${INDUSTRY_SNAPSHOT.asOf} ｜ 来源：${INDUSTRY_SNAPSHOT.source}`);
+L.push("> 口径说明：行业协会调研/统计数据，非审计数据；引用须标注来源与时间。");
+L.push("");
+L.push("| 指标 | 数值 | 备注 |");
+L.push("|---|---|---|");
+for (const mt of INDUSTRY_SNAPSHOT.metrics) {
+  L.push(`| ${mt.label} | ${mt.value} | ${mt.note ?? "—"} |`);
+}
+L.push("");
+
+L.push(`## 五、威士忌新国标要点（${WHISKY_STANDARD.code}）`);
+L.push("");
+L.push(`> ${WHISKY_STANDARD.name} ｜ 实施日期：${WHISKY_STANDARD.effectiveFrom}`);
+L.push(`> 来源：${WHISKY_STANDARD.source}`);
+L.push("> 用途：判断一款产品「是不是威士忌、属于哪一类」的合规判据；以国标原文为准。");
+L.push("");
+L.push("| 主题 | 要求 |");
+L.push("|---|---|");
+for (const p of WHISKY_STANDARD.points) {
+  L.push(`| ${p.topic} | ${p.requirement} |`);
+}
+L.push("");
+
+L.push("## 六、可信度说明");
 L.push("");
 L.push("- ✅ **已核实**：有公开/可靠来源。");
 L.push("- 🟡 **待厂方确认**：基于报道/行业共识，未获厂方一手确认。");
