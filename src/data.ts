@@ -71,7 +71,7 @@ export interface Region {
 export const REGIONS: Region[] = [
   { id: "qionglai", name: "邛崃", province: "四川", note: "川酒重镇，威士忌产能集聚地，崃州所在地。", distilleryIds: ["laizhou"] },
   { id: "emeishan", name: "峨眉山", province: "四川", note: "生态产区，叠川（保乐力加）所在地。", distilleryIds: ["diechuan"] },
-  { id: "qiandaohu", name: "千岛湖", province: "浙江", note: "水源型产区：2026-09 发布国内首个产区级威士忌团体标准与产区 Logo（森林覆盖率 77.8%），已集聚酒厂 6 家、设计产能 2.03 万吨/年，主打「酒+文旅」。", distilleryIds: ["chunan"] },
+  { id: "qiandaohu", name: "千岛湖", province: "浙江", note: "水源型产区：2026-09 发布国内首个产区级威士忌团体标准与产区 Logo（森林覆盖率 77.8%），已集聚酒厂 6 家、设计产能 2.03 万吨/年，主打「酒+文旅」；含英国奥歌诗丹迪旗下淳岸。", distilleryIds: ["chunan", "chunzhigu", "qdhjinjiu"] },
   { id: "dali", name: "大理", province: "云南", note: "高海拔产区，云拓（帝亚吉欧）所在地。", distilleryIds: ["yuntuo"] },
   { id: "dianxi", name: "滇西（横断山带）", province: "云南", note: "横断山及余脉产区带：无量山（茶桶）、巍山（本土木种）等，东方风味试验最密集的区域。", distilleryIds: ["lunbuka", "lingyun", "yunsuozhi"] },
   { id: "guangdong", name: "广东产区带", province: "广东", note: "大湾区 + 粤东北：源自福建的大芹、广州的中国橡木專線觀橡、梅州的米酿基因太瓏釀。", distilleryIds: ["daqin", "guanxiang", "tailongniang"] },
@@ -439,19 +439,71 @@ export const DISTILLERIES: Distillery[] = [
     name: "淳岸",
     region: "qiandaohu",
     location: "浙江杭州淳安 · 千岛湖",
-    owner: "英国奥歌诗丹迪集团（Angus Dundee Distillers）全资",
+    owner: "英国奥歌诗丹迪集团（Angus Dundee Distillers Plc）全资",
     style: "单一麦芽 · 外资 · 工旅融合",
-    story: "英国奥歌诗丹迪集团全资打造，是该集团在英国本土以外唯一的单一麦芽威士忌酒厂，也是千岛湖首个外资工旅融合项目；2026 年 7 月体验中心对外开放，提供沉浸式导览、3D 光影秀与全流程车间参观。",
-    source: "杭州日报 / 杭州市政府门户（2026-09-21）",
+    story: "英国奥歌诗丹迪集团在海外最大规模的实业投资（总投资 7 亿元）：该集团在英国本土以外唯一的单一麦芽威士忌酒厂，也是千岛湖首个外资工旅融合项目。2023-12 奠基、2024-04 动工，2025 年底试生产、2026 年 5 月全面开放。",
+    source: "千岛湖新闻网（2025-11-04）+ 杭州日报 / 杭州市政府门户（2026-09-21）",
     confidence: "pending",
     process: { cask: "待采集", still: "待采集" },
-    terroir: { climate: "千岛湖水源型产区（产区森林覆盖率 77.8%）", water: "千岛湖水系（待核）" },
+    terroir: {
+      climate: "千岛湖水源型产区（产区森林覆盖率 77.8%）",
+      water: "千岛湖优质水资源（官方称纯净水质赋予更纯净酒体）",
+      aging: "酒库可洞藏 10 万桶橡木桶；酒厂年产能力 4500 吨",
+    },
     flavor: {
       dominant: ["待采集"],
       community: "待以真人盲品聚合，AI 不做判断",
     },
     products: [
       { name: "待采集", cask: "待采集", tier: "待核", confidence: "unverified" },
+    ],
+  },
+
+  /* ---------- 千岛湖本土批次（来源：凤凰网浙江/淳安发布 2025-04、千岛湖新闻网 2026-07） ---------- */
+
+  {
+    id: "chunzhigu",
+    name: "淳之谷（白猿）",
+    region: "qiandaohu",
+    location: "浙江杭州淳安 · 文昌镇高铁生态产业园",
+    owner: "杭州千岛湖威士忌酒业有限公司",
+    style: "单一麦芽 · 中国威士忌 · 浙江首家规模化酒厂",
+    story: "浙江首家规模化威士忌酒厂（2024 年正式投产），植根国家 5A 级千岛湖畔、三面环山一面临湖；上市仅一周年即在 IWSC / SFWSC / WWA 全球顶级赛事累计斩获 3 个金奖，拒绝做「海外平替」，坚持探索中国风土。",
+    source: "千岛湖新闻网（2026-07-22）+ 凤凰网浙江 / 淳安发布（2025-04-22）",
+    confidence: "pending",
+    process: {
+      cask: "双桶混桶工艺（波本桶 + 雪莉桶）；生肖限定款用雪莉桶 + 马尔萨拉桶",
+      maturation: "全面达产后年产规模预计 2100 吨",
+    },
+    terroir: { water: "千岛湖核心湖区弱碱活水" },
+    flavor: {
+      official: "清爽奶油果香 + 蜜饯、肉桂风味交织（官方口径）",
+      dominant: ["奶油果香-蜜饯肉桂（官方口径，待聚合）", "乌龙茶香（生肖款，官方口径，待聚合）"],
+      community: "2025 WWA 金/银奖（白猿）、2025 IWSC 金奖、2026 IWSC 金奖、2026 SFWSC 金奖（淳之谷）",
+    },
+    products: [
+      { name: "淳之谷金奖单一麦芽中国威士忌", cask: "波本桶 + 雪莉桶双桶", tier: "待核", confidence: "pending", note: "2026 IWSC 金奖 + SFWSC 金奖" },
+      { name: "丙午年「一马当先」马年生肖限定款", cask: "雪莉桶 + 马尔萨拉桶双桶（全球限量）", tier: "限量/收藏", confidence: "pending", note: "2026 IWSC 金奖；东方乌龙茶香" },
+      { name: "白猿标准版 / 兔年限定版", cask: "待采集", tier: "待核", confidence: "pending", note: "2025 WWA 银奖 / 金奖" },
+    ],
+  },
+  {
+    id: "qdhjinjiu",
+    name: "九龙淳（千岛金久）",
+    region: "qiandaohu",
+    location: "浙江杭州淳安 · 文昌镇",
+    owner: "杭州千岛金久酒业有限公司",
+    style: "调和威士忌 · 金酒 · 酒旅配套",
+    story: "落户千岛湖文昌镇的金酒及威士忌项目，规划建设用地约 34 亩，配套建设主题式酒店提供完整旅游体验；旗下调和威士忌「九龙淳」获 2025 年 WWA 国际威士忌竞赛金奖。",
+    source: "凤凰网浙江 / 淳安发布（2025-04-22）",
+    confidence: "pending",
+    process: { cask: "待采集" },
+    flavor: {
+      dominant: ["待采集"],
+      community: "2025 WWA 国际威士忌竞赛金奖（调和威士忌「九龙淳」）",
+    },
+    products: [
+      { name: "九龙淳 调和威士忌", cask: "待采集", tier: "待核", confidence: "pending", note: "2025 WWA 金奖" },
     ],
   },
 ];
@@ -583,14 +635,48 @@ export const INDUSTRY_POLICIES: PolicyItem[] = [
       "工业和信息化部、人力资源社会保障部、市场监管总局联合印发；明确支持威士忌、白兰地、伏特加等产品本土化发展，鼓励各地挖掘自然风土、历史文化、产品风格等资源禀赋，塑造核心竞争力。",
   },
   {
-    name: "威士忌进口税率下调",
-    issuedAt: "近年",
-    detail: "降低进口成本，同时为国产与进口的公平竞争提供环境（中酒协口径）。",
+    name: "威士忌进口税率下调 / 关税减半",
+    issuedAt: "近年（2026-05 中苏会谈确认）",
+    detail:
+      "中方对威士忌关税减半；中苏双方在 2026-05 联合声明会谈中对其积极效应给予高度评价，认为将进一步促进双边贸易。",
   },
   {
     name: "酒类产业定位调整",
     issuedAt: "近年",
     detail: "酒类从过去的「限制性行业」转为国家重点扶持的「历史经典产业」（中酒协口径）。",
+  },
+];
+
+/* ============ 国际行业协作：中酒协 × 苏格兰威士忌协会 ============ */
+
+export interface IndustryMilestone {
+  name: string;
+  date: string;
+  detail: string;
+  source: string;
+}
+
+export const INDUSTRY_MILESTONES: IndustryMilestone[] = [
+  {
+    name: "中国酒业协会与苏格兰威士忌协会发表联合声明",
+    date: "2026-05-07",
+    detail:
+      "中国酒业协会代表团（理事长宋书玉）到访爱丁堡苏格兰威士忌协会总部，双方就产业政策、市场准入、标准对接及可持续发展会谈并发表联合声明，中国驻爱丁堡总领事张飙出席。五项要点：① 相互学习与支持；② 共享价值观与优先事项（无障碍进入主要出口市场、打击非法酒精、保护原产地地理标志）；③ 产业标准与可持续性；④ 创新与可持续性；⑤ 支持贸易环境建设。被视为全球蒸馏酒产业多边合作的重要里程碑。",
+    source: "糖酒网（2026-05-08）",
+  },
+  {
+    name: "中国威士忌千岛湖产区三项成果发布",
+    date: "2026-09-19",
+    detail:
+      "淳安发布「中国威士忌千岛湖产区团体标准」+ 产区 Logo + 千岛湖威士忌产业学院——填补国内产区级威士忌标准空白；产业学院为全国首个以威士忌文化为核心，推动酿酒师、品酒师纳入紧缺职业目录。",
+    source: "杭州日报 / 杭州市政府门户（2026-09-21）",
+  },
+  {
+    name: "国产威士忌出海与国际赛事突破",
+    date: "2025–2026",
+    detail:
+      "千岛湖淳之谷上市一周年累计 3 个国际金奖（2025 IWSC、2026 IWSC、2026 SFWSC）；九龙淳获 2025 WWA 金奖；白猿获 2025 WWA 金/银奖；云拓获 2026 世界威士忌大师赛 New Make 金奖；叠川经香港出海。",
+    source: "千岛湖新闻网 / 凤凰网浙江 / 周末画报 / 香港文汇报",
   },
 ];
 

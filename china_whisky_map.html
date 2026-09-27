@@ -35,7 +35,7 @@
 <body>
 <div class="header">
   <h1>中国威士忌版图 <span>｜ 上九国威知识库</span></h1>
-  <div class="sub">16 家国产威士忌酒厂 · 11 大产区萌芽体系（全部产区均已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
+  <div class="sub">18 家国产威士忌酒厂 · 11 大产区萌芽体系（全部产区均已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
 </div>
 <div class="wrap">
   <div id="chart"><div class="map-note">地图加载中…</div></div>
@@ -64,7 +64,9 @@ var pending = [
   { name: "古奇 · 安徽亳州 · 古井贡×卡慕", value: [115.683257, 33.991547, 35], id: "guqi" },
   { name: "阿拉嘉宝 · 西藏拉萨 · 独立", value: [91.156635, 29.656707, 30], id: "alajiaobao" },
   { name: "德熙 · 福建龙岩新罗区 · 怡园酒业", value: [117.017000, 25.075000, 30], id: "dexi" },
-  { name: "淳岸 · 浙江杭州淳安千岛湖 · 奥歌诗丹迪", value: [119.042000, 29.605000, 30], id: "chunan" }
+  { name: "淳岸 · 浙江杭州淳安千岛湖 · 奥歌诗丹迪", value: [119.042000, 29.605000, 30], id: "chunan" },
+  { name: "淳之谷（白猿） · 浙江淳安文昌镇 · 千岛湖威士忌酒业", value: [119.100000, 29.600000, 30], id: "chunzhigu" },
+  { name: "九龙淳 · 浙江淳安文昌镇 · 千岛金久酒业", value: [119.120000, 29.560000, 30], id: "qdhjinjiu" }
 ];
 var regionMarks = [
   { name: "千岛湖产区", value: [119.02, 29.61], id: "qiandaohu", note: "水源型产区 · 行业团体标准立项地 · 暂无酒厂标注" }
@@ -87,7 +89,9 @@ var distilleries = {
   alajiaobao: { nm: "阿拉嘉宝/香格里拉", direction: "青稞威士忌 · 极端风土", cask: "待核", flavor: "青稞谷物感（待核）", verified: false, region: "青藏高原产区", meta: "西藏拉萨 · 独立" },
   gaolang: { nm: "高朗（Goalong）", direction: "单一麦芽 · 多桶型试验 · 酒旅融合", cask: "酒窖 28 种桶型（波本/中式雪莉/中国白兰地/水楢/泥煤 + 红酒桶）", flavor: "麦芽-柑橘青苹果 / 奶油甜感·烤面包焦香", verified: true, region: "浏阳（湘东）产区", meta: "湖南浏阳 · 高朗烈酒集团" },
   dexi: { nm: "德熙", direction: "单一麦芽 · 双桶 · 生态产区", cask: "双桶（融萃双桶）", flavor: "待采集", verified: false, region: "闽西（龙岩）产区", meta: "福建龙岩新罗区 · 怡园酒业" },
-  chunan: { nm: "淳岸", direction: "单一麦芽 · 外资（英国奥歌诗丹迪）· 工旅融合", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江杭州淳安 · 奥歌诗丹迪集团" }
+  chunan: { nm: "淳岸", direction: "单一麦芽 · 外资（英国奥歌诗丹迪）· 工旅融合", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江杭州淳安 · 奥歌诗丹迪集团（总投资 7 亿 / 年产 4500 吨）" },
+  chunzhigu: { nm: "淳之谷（白猿）", direction: "单一麦芽 · 中国威士忌 · 3 项国际金奖", cask: "波本桶 + 雪莉桶双桶；生肖款雪莉桶+马尔萨拉桶", flavor: "奶油果香-蜜饯肉桂 / 乌龙茶香", verified: false, region: "千岛湖产区", meta: "浙江淳安文昌镇 · 千岛湖威士忌酒业（浙江首家规模化酒厂）" },
+  qdhjinjiu: { nm: "九龙淳", direction: "调和威士忌 · 金酒 · 酒旅配套", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江淳安文昌镇 · 千岛金久酒业（2025 WWA 金奖）" }
 };
 var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "浏阳（湘东）产区", "闽西（龙岩）产区", "千岛湖产区"];
 var allMarks = verified.concat(pending).concat(regionMarks);
