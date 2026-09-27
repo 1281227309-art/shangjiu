@@ -35,7 +35,7 @@
 <body>
 <div class="header">
   <h1>中国威士忌版图 <span>｜ 上九国威知识库</span></h1>
-  <div class="sub">18 家国产威士忌酒厂 · 11 大产区萌芽体系（全部产区均已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
+  <div class="sub">19 家国产威士忌酒厂 · 11 大产区萌芽体系（全部产区均已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
 </div>
 <div class="wrap">
   <div id="chart"><div class="map-note">地图加载中…</div></div>
@@ -66,7 +66,8 @@ var pending = [
   { name: "德熙 · 福建龙岩新罗区 · 怡园酒业", value: [117.017000, 25.075000, 30], id: "dexi" },
   { name: "淳岸 · 浙江杭州淳安千岛湖 · 奥歌诗丹迪", value: [119.042000, 29.605000, 30], id: "chunan" },
   { name: "淳之谷（白猿） · 浙江淳安文昌镇 · 千岛湖威士忌酒业", value: [119.100000, 29.600000, 30], id: "chunzhigu" },
-  { name: "九龙淳 · 浙江淳安文昌镇 · 千岛金久酒业", value: [119.120000, 29.560000, 30], id: "qdhjinjiu" }
+  { name: "九龙淳 · 浙江淳安文昌镇 · 千岛金久酒业", value: [119.120000, 29.560000, 30], id: "qdhjinjiu" },
+  { name: "高桥威士忌酒庄 · 四川峨眉山高桥镇 · 郎酒集团", value: [103.440000, 29.540000, 30], id: "gaoqiao" }
 ];
 var regionMarks = [
   { name: "千岛湖产区", value: [119.02, 29.61], id: "qiandaohu", note: "水源型产区 · 行业团体标准立项地 · 暂无酒厂标注" }
@@ -91,7 +92,8 @@ var distilleries = {
   dexi: { nm: "德熙", direction: "单一麦芽 · 双桶 · 生态产区", cask: "双桶（融萃双桶）", flavor: "待采集", verified: false, region: "闽西（龙岩）产区", meta: "福建龙岩新罗区 · 怡园酒业" },
   chunan: { nm: "淳岸", direction: "单一麦芽 · 外资（英国奥歌诗丹迪）· 工旅融合", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江杭州淳安 · 奥歌诗丹迪集团（总投资 7 亿 / 年产 4500 吨）" },
   chunzhigu: { nm: "淳之谷（白猿）", direction: "单一麦芽 · 中国威士忌 · 3 项国际金奖", cask: "波本桶 + 雪莉桶双桶；生肖款雪莉桶+马尔萨拉桶", flavor: "奶油果香-蜜饯肉桂 / 乌龙茶香", verified: false, region: "千岛湖产区", meta: "浙江淳安文昌镇 · 千岛湖威士忌酒业（浙江首家规模化酒厂）" },
-  qdhjinjiu: { nm: "九龙淳", direction: "调和威士忌 · 金酒 · 酒旅配套", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江淳安文昌镇 · 千岛金久酒业（2025 WWA 金奖）" }
+  qdhjinjiu: { nm: "九龙淳", direction: "调和威士忌 · 金酒 · 酒旅配套", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江淳安文昌镇 · 千岛金久酒业（2025 WWA 金奖）" },
+  gaoqiao: { nm: "高桥威士忌酒庄", direction: "麦芽威士忌 · 郎酒第三座世界级酒庄 · 工业+文旅", cask: "待采集", flavor: "待采集", verified: false, region: "峨眉山产区", meta: "四川峨眉山高桥镇 · 郎酒集团（10 亿 / 首期年产能 1 万吨）" }
 };
 var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "浏阳（湘东）产区", "闽西（龙岩）产区", "千岛湖产区"];
 var allMarks = verified.concat(pending).concat(regionMarks);

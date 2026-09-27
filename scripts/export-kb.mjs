@@ -100,6 +100,14 @@ L.push(`- 发布日期：${REGIONAL_STANDARD_QIANDAOHU.publishedAt}`);
 L.push(`- 意义：${REGIONAL_STANDARD_QIANDAOHU.significance}`);
 L.push(`- 来源：${REGIONAL_STANDARD_QIANDAOHU.source}`);
 L.push("");
+if (REGIONAL_STANDARD_QIANDAOHU.coreContent) {
+  L.push("**核心条款**");
+  L.push("");
+  for (const c of REGIONAL_STANDARD_QIANDAOHU.coreContent) {
+    L.push(`- ${c}`);
+  }
+  L.push("");
+}
 
 L.push("## 七、产业政策与行业里程碑");
 L.push("");
