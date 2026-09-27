@@ -6,7 +6,7 @@
  * 运行：node scripts/export-kb.mjs > ../上九国威知识库_手动录入数据包.md
  */
 
-import { REGIONS, DISTILLERIES, INDUSTRY_SNAPSHOT, WHISKY_STANDARD, GROUP_STANDARD_SOLID, INDUSTRY_POLICIES, INDUSTRY_MILESTONES, regionName } from "../src/data.ts";
+import { REGIONS, DISTILLERIES, INDUSTRY_SNAPSHOT, WHISKY_STANDARD, GROUP_STANDARD_SOLID, REGIONAL_STANDARD_QIANDAOHU, INDUSTRY_POLICIES, INDUSTRY_MILESTONES, regionName } from "../src/data.ts";
 
 const C = { verified: "✅已核实", pending: "🟡待厂方确认", unverified: "⬜待采集" };
 const L = [];
@@ -90,6 +90,15 @@ L.push("");
 for (const k of GROUP_STANDARD_SOLID.keyPoints) {
   L.push(`- ${k}`);
 }
+L.push("");
+
+L.push(`### 产区级标准：${REGIONAL_STANDARD_QIANDAOHU.name}`);
+L.push("");
+L.push(`- 发布机构：${REGIONAL_STANDARD_QIANDAOHU.issuer} ｜ 起草：${REGIONAL_STANDARD_QIANDAOHU.drafter}`);
+L.push(`- 流程：${REGIONAL_STANDARD_QIANDAOHU.processNote}`);
+L.push(`- 发布日期：${REGIONAL_STANDARD_QIANDAOHU.publishedAt}`);
+L.push(`- 意义：${REGIONAL_STANDARD_QIANDAOHU.significance}`);
+L.push(`- 来源：${REGIONAL_STANDARD_QIANDAOHU.source}`);
 L.push("");
 
 L.push("## 七、产业政策与行业里程碑");

@@ -16,6 +16,7 @@ import {
   INDUSTRY_SNAPSHOT,
   WHISKY_STANDARD,
   GROUP_STANDARD_SOLID,
+  REGIONAL_STANDARD_QIANDAOHU,
   INDUSTRY_POLICIES,
   INDUSTRY_MILESTONES,
   getDistillery,
@@ -130,6 +131,7 @@ export function getIndustryFacts() {
     snapshot: INDUSTRY_SNAPSHOT,
     standard: WHISKY_STANDARD,
     group_standard: GROUP_STANDARD_SOLID,
+    regional_standard: REGIONAL_STANDARD_QIANDAOHU,
     policies: INDUSTRY_POLICIES,
     milestones: INDUSTRY_MILESTONES,
     credibility_notice:
