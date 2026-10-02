@@ -35,14 +35,14 @@
 <body>
 <div class="header">
   <h1>中国威士忌版图 <span>｜ 上九国威知识库</span></h1>
-  <div class="sub">19 家国产威士忌酒厂 · 11 大产区萌芽体系（全部产区均已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码 ｜ 数据来源：上九国威知识库 MCP（可信度分级标注）</div>
+  <div class="sub">23 家国产威士忌酒厂 · 11 大产区萌芽体系（全部产区均已有酒厂标注）｜ 坐标来源：高德地图 POI 检索与地理编码（新增 4 家为县/区级参考定位，待 POI 复核）｜ 数据来源：上九国威知识库 MCP（可信度分级标注）｜ 数据截至 2026-10-02</div>
 </div>
 <div class="wrap">
   <div id="chart"><div class="map-note">地图加载中…</div></div>
   <div class="sidebar" id="sidebar"></div>
 </div>
 <div class="footer-note">
-  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI；高朗暂为浏阳市级参考定位，待补精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位；桶型/风味为主导向，待核）。千岛湖产区为水源型立项产区（行业团体标准立项地，暂无酒厂标注）。
+  可信度分级：<b style="color:#c4a35a">✅ 已核实</b>（金色标注，坐标为高德精确 POI；高朗暂为浏阳市级参考定位，待补精确 POI）／ <b style="color:#a8b0a0">🟡 待厂方确认</b>（灰绿标注，坐标为市县级参考定位；桶型/风味为主导向，待核）。2026-10-02 新增隐象、万季、久溪、青岛威士忌（青岛牌）四家，其坐标为县/区/市级参考定位、待高德 POI 复核，故暂以灰绿标注；千岛湖产区已由 T/HZAS 118—2026 团体标准（2026-10-19 实施）确立，已集聚 6 家酒厂（投产家数待核）。
   滚轮缩放地图，悬停/点击查看酒厂方向与桶型风味，点击右侧列表可定位到酒厂。知识库数据遵循诚实守则：不编造品鉴笔记与价格，凡无一手来源一律标注待核。
 </div>
 <script>
@@ -67,33 +67,41 @@ var pending = [
   { name: "淳岸 · 浙江杭州淳安千岛湖 · 奥歌诗丹迪", value: [119.042000, 29.605000, 30], id: "chunan" },
   { name: "淳之谷（白猿） · 浙江淳安文昌镇 · 千岛湖威士忌酒业", value: [119.100000, 29.600000, 30], id: "chunzhigu" },
   { name: "九龙淳 · 浙江淳安文昌镇 · 千岛金久酒业", value: [119.120000, 29.560000, 30], id: "qdhjinjiu" },
-  { name: "高桥威士忌酒庄 · 四川峨眉山高桥镇 · 郎酒集团", value: [103.440000, 29.540000, 30], id: "gaoqiao" }
+  { name: "高桥威士忌酒庄 · 四川峨眉山高桥镇 · 郎酒集团", value: [103.440000, 29.540000, 30], id: "gaoqiao" },
+  { name: "隐象 · 浙江淳安文昌镇 · 工旅融合（县级参考定位）", value: [119.095000, 29.605000, 30], id: "yinxiang" },
+  { name: "万季 · 浙江淳安威坪镇 · 福赛斯全套设备（县级参考定位）", value: [118.860000, 29.720000, 30], id: "wanji" },
+  { name: "久溪 · 福建龙岩新罗区 · 省重点项目（区级参考定位）", value: [117.050000, 25.100000, 30], id: "jiuxi" },
+  { name: "青岛威士忌（青岛牌） · 山东青岛 · 青岛啤酒体系（市级参考定位）", value: [120.380000, 36.070000, 30], id: "qingdao" }
 ];
 var regionMarks = [
-  { name: "千岛湖产区", value: [119.02, 29.61], id: "qiandaohu", note: "水源型产区 · 行业团体标准立项地 · 暂无酒厂标注" }
+  { name: "千岛湖产区", value: [119.02, 29.61], id: "qiandaohu", note: "水源型产区 · T/HZAS 118—2026 团标（2026-10-19 实施）· 已集聚 6 家酒厂（投产家数待核）" }
 ];
 
 /* 每家：方向 / 桶型 / 风味（待确认的风味带「待核」） */
 var distilleries = {
-  laizhou: { nm: "崃州", direction: "主流 · 口粮档（约六成市占，100-400元）", cask: "多桶型体系（加强酒/STR红酒/波本）", flavor: "红苹果-乌龙茶 / 李-香草-木烟 / 蜂蜜-杏", verified: true, region: "邛崃产区", meta: "四川邛崃 · 百润股份" },
-  diechuan: { nm: "叠川", direction: "高端 · 生态产区（888元锚点）", cask: "波本+雪莉+中国丹宁橡木（蒙古栎）", flavor: "糖浆-棉花糖甜感 / 柚木-雪松-薄荷柑橘", verified: true, region: "峨眉山产区", meta: "四川峨眉山 · 保乐力加" },
+  laizhou: { nm: "崃州", direction: "主流 · 口粮档（100-400元）；WWA 2026 中国最佳单一麦芽（Bourbon Cask Peated Malt）", cask: "多桶型体系（加强酒/STR红酒/波本）", flavor: "红苹果-乌龙茶 / 李-香草-木烟 / 蜂蜜-杏", verified: true, region: "邛崃产区", meta: "四川邛崃 · 百润股份" },
+  diechuan: { nm: "叠川", direction: "高端 · 生态产区（888元锚点）；2024 ISC 世界威士忌组别金奖", cask: "波本+雪莉+中国丹宁橡木（蒙古栎）", flavor: "糖浆-棉花糖甜感 / 柚木-雪松-薄荷柑橘", verified: true, region: "峨眉山产区", meta: "四川峨眉山 · 保乐力加" },
   yuntuo: { nm: "云拓", direction: "高端 · 高海拔（2026 Icons 获奖）", cask: "待核", flavor: "高海拔 / 风土", verified: true, region: "大理产区", meta: "云南洱源凤羽 · 帝亚吉欧" },
   daqin: { nm: "大芹", direction: "单一麦芽 · 东方风味 · 酒旅康养（新厂达产 2 万千升，138 项国际奖）", cask: "波本桶为主 · 含双桶", flavor: "东方果香 / 波本甜感", verified: true, region: "广东产区带", meta: "广东惠州龙门 · 独立" },
   lingyun: { nm: "凌酝", direction: "单一麦芽 · 本土木种试验", cask: "云南麻栎 / 滇合欢木桶", flavor: "本土木种风味（待核）", verified: false, region: "滇西横断山带", meta: "云南巍山 · 独立" },
   lunbuka: { nm: "伦布卡（无量川）", direction: "茶威士忌路线", cask: "高山白茶润桶 · 以茶代糖", flavor: "白茶 / 茶韵（待核）", verified: false, region: "滇西横断山带", meta: "云南南涧无量山 · 独立" },
   yunsuozhi: { nm: "云之所", direction: "单一麦芽 · 本地酒桶", cask: "云南葡萄酒桶", flavor: "葡萄酒桶果香（待核）", verified: false, region: "滇西横断山带", meta: "云南 · 独立" },
-  guanxiang: { nm: "觀橡（顺昌源）", direction: "100% 中国橡木桶", cask: "长白山/辽东栎 + 荔枝/金桔润桶 + 泥煤蒙古栎桶", flavor: "水楢-杜松-柚子 / 木桶树脂", verified: false, region: "广东产区带", meta: "广东广州从化 · 顺昌源" },
+  guanxiang: { nm: "觀橡（顺昌源）", direction: "100% 中国橡木桶；WWA 2026 世界最佳调和麦芽威士忌", cask: "长白山/辽东栎 + 荔枝/金桔润桶 + 泥煤蒙古栎桶", flavor: "水楢-杜松-柚子 / 木桶树脂", verified: false, region: "广东产区带", meta: "广东广州从化 · 顺昌源" },
   tailongniang: { nm: "太瓏釀（珍珠红）", direction: "米酿基因 · 东方工艺", cask: "陶缸老熟 + 黄酒桶后熟", flavor: "米酿甜感 / 黄酒韵（待核）", verified: false, region: "广东产区带", meta: "广东梅州兴宁 · 珍珠红" },
   jisiboer: { nm: "吉斯波尔", direction: "东方香型体系", cask: "蒙古栎「雕堡桶」", flavor: "沉香 / 茶韵（待核）", verified: false, region: "胶东半岛产区", meta: "山东烟台牟平 · 吉斯集团" },
   yuzhijin: { nm: "钰之锦", direction: "风味桶实验", cask: "茶桶 / 树莓桶 / 霞多丽桶", flavor: "茶 / 树莓果香（待核）", verified: false, region: "胶东半岛产区", meta: "山东蓬莱 · 独立" },
-  guqi: { nm: "古奇（古井贡×卡慕）", direction: "草本威士忌", cask: "待核", flavor: "草本 / 药香（待核）", verified: false, region: "亳州产区", meta: "安徽亳州 · 古井贡×卡慕" },
+  guqi: { nm: "古奇（古井贡×卡慕）", direction: "草本威士忌；蒙古栎桶款 2026-09-19 拍卖成交 80 万元", cask: "蒙古栎桶（草本威士忌）", flavor: "草本 / 药香（待核）", verified: false, region: "亳州产区", meta: "安徽亳州 · 古井贡×卡慕" },
   alajiaobao: { nm: "阿拉嘉宝/香格里拉", direction: "青稞威士忌 · 极端风土", cask: "待核", flavor: "青稞谷物感（待核）", verified: false, region: "青藏高原产区", meta: "西藏拉萨 · 独立" },
   gaolang: { nm: "高朗（Goalong）", direction: "单一麦芽 · 多桶型试验 · 酒旅融合", cask: "酒窖 28 种桶型（波本/中式雪莉/中国白兰地/水楢/泥煤 + 红酒桶）", flavor: "麦芽-柑橘青苹果 / 奶油甜感·烤面包焦香", verified: true, region: "浏阳（湘东）产区", meta: "湖南浏阳 · 高朗烈酒集团" },
   dexi: { nm: "德熙", direction: "单一麦芽 · 双桶 · 生态产区", cask: "双桶（融萃双桶）", flavor: "待采集", verified: false, region: "闽西（龙岩）产区", meta: "福建龙岩新罗区 · 怡园酒业" },
   chunan: { nm: "淳岸", direction: "单一麦芽 · 外资（英国奥歌诗丹迪）· 工旅融合", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江杭州淳安 · 奥歌诗丹迪集团（总投资 7 亿 / 年产 4500 吨）" },
   chunzhigu: { nm: "淳之谷（白猿）", direction: "单一麦芽 · 中国威士忌 · 3 项国际金奖", cask: "波本桶 + 雪莉桶双桶；生肖款雪莉桶+马尔萨拉桶", flavor: "奶油果香-蜜饯肉桂 / 乌龙茶香", verified: false, region: "千岛湖产区", meta: "浙江淳安文昌镇 · 千岛湖威士忌酒业（浙江首家规模化酒厂）" },
   qdhjinjiu: { nm: "九龙淳", direction: "调和威士忌 · 金酒 · 酒旅配套", cask: "待采集", flavor: "待采集", verified: false, region: "千岛湖产区", meta: "浙江淳安文昌镇 · 千岛金久酒业（2025 WWA 金奖）" },
-  gaoqiao: { nm: "高桥威士忌酒庄", direction: "麦芽威士忌 · 郎酒第三座世界级酒庄 · 工业+文旅", cask: "待采集", flavor: "待采集", verified: false, region: "峨眉山产区", meta: "四川峨眉山高桥镇 · 郎酒集团（10 亿 / 首期年产能 1 万吨）" }
+  gaoqiao: { nm: "高桥威士忌酒庄", direction: "麦芽威士忌 · 郎酒第三座世界级酒庄 · 工业+文旅", cask: "待采集", flavor: "待采集", verified: false, region: "峨眉山产区", meta: "四川峨眉山高桥镇 · 郎酒集团（10 亿 / 首期年产能 1 万吨）" },
+  yinxiang: { nm: "隐象", direction: "单一麦芽 · 工旅融合（2026 产能预计 40 万升）", cask: "Forsyths 定制手工蒸馏系统（工艺参数待采集）", flavor: "待采集（AI 不做判断）", verified: false, region: "千岛湖产区", meta: "浙江淳安文昌镇 · 独立（坐标：县级参考定位，待 POI 复核）" },
+  wanji: { nm: "万季", direction: "单一麦芽 · 福赛斯全套设备（计划总投资 5.5 亿元）", cask: "待采集", flavor: "待采集（AI 不做判断）", verified: false, region: "千岛湖产区", meta: "浙江淳安威坪镇 · 万季（杭州千岛湖）威士忌酒业（坐标：县级参考定位）" },
+  jiuxi: { nm: "久溪", direction: "单一麦芽（规划）· 福建省重点项目 · 2025-07-30 投产", cask: "2 座精馏器（5450 / 5740 升）+ 1 座 1.5 万升初馏器（桶型待采集）", flavor: "待采集（AI 不做判断）", verified: false, region: "闽西（龙岩）产区", meta: "福建龙岩新罗区龙池工业园区 · 久溪（福建龙岩）酒业（坐标：区级参考定位）" },
+  qingdao: { nm: "青岛威士忌（青岛牌）", direction: "单一麦芽 / 单一谷物 · 老品牌重启 · 2026-09 进韩国免税渠道", cask: "蒙古栎 / 波本 / Oloroso 雪莉 / 赤霞珠葡萄酒桶；单一谷物为干邑桶 + 波本桶 10 年", flavor: "待采集（AI 不做判断）", verified: false, region: "胶东半岛产区", meta: "山东青岛 · 青岛啤酒体系（坐标：市级参考定位）" }
 };
 var regions = ["邛崃产区", "峨眉山产区", "大理产区", "滇西横断山带", "广东产区带", "胶东半岛产区", "亳州产区", "青藏高原产区", "浏阳（湘东）产区", "闽西（龙岩）产区", "千岛湖产区"];
 var allMarks = verified.concat(pending).concat(regionMarks);
