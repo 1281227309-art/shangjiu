@@ -1,0 +1,58 @@
+{
+  "url": "file:///Users/mac/Desktop/上九蒸馏所/上九AI文件夹/电商运营/上九国威知识库-mcp/geo-ai-assistant-design/geo-ai-assistant.html",
+  "axeVersion": null,
+  "results": [
+    {
+      "name": "无 serious / critical 违规",
+      "pass": true,
+      "detail": "零违规"
+    },
+    {
+      "name": "无 serious / critical 违规",
+      "pass": true,
+      "detail": "零违规"
+    },
+    {
+      "name": "无 serious / critical 违规",
+      "pass": true,
+      "detail": "零违规"
+    },
+    {
+      "name": "无 serious / critical 违规",
+      "pass": true,
+      "detail": "零违规"
+    },
+    {
+      "name": "失败态无 serious / critical 违规",
+      "pass": true,
+      "detail": "零违规"
+    },
+    {
+      "name": "color-contrast 规则通过（axe 未发现对比度问题）",
+      "pass": true,
+      "detail": "通过规则 10 条"
+    },
+    {
+      "name": "不存在 aria 属性/名称类违规",
+      "pass": true,
+      "detail": "无"
+    },
+    {
+      "name": "无 aria-hidden 焦点 / 嵌套交互等结构性违规",
+      "pass": true,
+      "detail": "无"
+    },
+    {
+      "name": "无未捕获错误",
+      "pass": true,
+      "detail": "干净"
+    }
+  ],
+  "violations": {
+    "light": [],
+    "dark": [],
+    "mobileCollapsed": [],
+    "mobileExpanded": [],
+    "errorState": []
+  }
+}

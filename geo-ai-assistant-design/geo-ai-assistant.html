@@ -1,0 +1,2739 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-metrics="pending">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="GeoRecall 知荐 · AI 助手 —— 让豆包、千问、Kimi 想起并推荐您的品牌。基于 Pretext 文本测量引擎的对话式 GEO 诊断工作台。">
+<meta name="theme-color" content="#2559E0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1220" media="(prefers-color-scheme: dark)">
+<title>GeoRecall 知荐 · AI 助手｜品牌可见度诊断</title>
+
+<!--
+  ══════════════════════════════════════════════════════════════════════════════
+  GeoRecall 知荐 · AI 助手 —— 生产级高保真设计
+  品牌方向：蓝（主） + 白（承载） + 橙（点缀）
+  ══════════════════════════════════════════════════════════════════════════════
+  技术要点
+  · 文本测量由 Pretext (@chenglou/pretext v0.0.9) 承担：气泡紧贴宽度、
+    输入框高度预测、流式输出只在行数变化时调整滚动 —— 全程不触发 DOM 重排。
+  · 降级链：Pretext 不可用（无 Intl.Segmenter / Canvas）→ DOM 回退测量，
+    界面与功能不变，仅测量精度/性能下降；页脚徽章会如实标注当前引擎。
+  · 无 JS 时：种子对话为静态 HTML，内容可见可读（渐进增强）。
+  · 颜色全部经 tools/check-contrast.mjs 以 WCAG 2.1 断言校验（51 项全通过）。
+  ══════════════════════════════════════════════════════════════════════════════
+-->
+
+<style>
+/* ═══════════════ 1. 设计令牌 ═══════════════ */
+:root{
+  /* —— 品牌蓝：主色 —— */
+  --blue-50:#EFF5FF; --blue-100:#DCE9FF; --blue-200:#BED6FF; --blue-300:#93BAFF;
+  --blue-400:#6096FF; --blue-500:#3B76F6; --blue-600:#2559E0; --blue-700:#1C46B8;
+  --blue-800:#193A91; --blue-900:#17316F; --blue-950:#0E1F46;
+
+  /* —— 品牌橙：点缀。500 仅用于大面积装饰/深色底；600 用于功能性图形（≥3:1）—— */
+  --orange-50:#FFF6ED; --orange-100:#FFE8D2; --orange-200:#FFCFA6; --orange-300:#FFAE6E;
+  --orange-400:#FF8836; --orange-500:#F76B0C; --orange-600:#DC5204; --orange-700:#B53E08;
+  --orange-800:#8F330E;
+
+  /* —— 中性（冷调，与蓝同源）—— */
+  --slate-50:#F8FAFC; --slate-100:#F1F5F9; --slate-200:#E2E8F0; --slate-300:#CBD5E1;
+  --slate-400:#94A3B8; --slate-500:#64748B; --slate-550:#5A6A80; --slate-600:#475569;
+  --slate-700:#334155; --slate-800:#1E293B; --slate-900:#111A2E; --slate-950:#0B1220;
+  --border-strong:#7E8FA6;
+  --white:#FFFFFF;
+
+  /* —— 状态色（含图形+文字双通道，不依赖颜色单一传达）—— */
+  --success:#15803D; --warning:#B45309; --danger:#C02626;
+  --success-soft:#F0FDF4; --warning-soft:#FFFBEB; --danger-soft:#FEF2F2;
+
+  /* —— 浅色主题语义层 —— */
+  --bg-page:#F5F8FD;
+  --bg-card:#FFFFFF;
+  --bg-subtle:#F1F5F9;
+  --bg-primary-soft:#EFF5FF;
+  --bg-accent-soft:#FFF6ED;
+  --text-primary:#111A2E;
+  --text-secondary:#475569;
+  --text-muted:#5A6A80;      /* 修正：原 slate-400 在白底仅 2.56:1 */
+  --text-placeholder:#5A6A80; /* 修正：占位符同样受 1.4.3 约束 */
+  --primary:#2559E0;
+  --primary-hover:#1C46B8;
+  --accent:#DC5204;          /* 功能性橙：白底 4.00:1，满足 1.4.11 */
+  --accent-decor:#F76B0C;    /* 装饰性橙：禁止承载正文 */
+  --accent-text:#B53E08;     /* 橙色文字：白底 5.74:1 */
+  --focus:#3B76F6;
+  --border:#E2E8F0;
+
+  /* —— 排版尺度：CSS 是唯一事实来源，JS 读取后生成 canvas font 字符串 —— */
+  --font-sans:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC","Hiragino Sans GB",system-ui,sans-serif;
+  --font-mono:"SFMono-Regular",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+
+  --t-body-size:15px;   --t-body-weight:400; --t-body-lh:24px;   /* 消息正文 */
+  --t-body-strong-weight:500;                                   /* 用户气泡正文（测量需与 CSS 一致） */
+  --t-body-bold-weight:700;                                     /* 段内 <strong>（rich-inline 逐片段测量用） */
+  --t-lead-size:17px;   --t-lead-weight:600; --t-lead-lh:26px;   /* 消息小标题 */
+  --t-small-size:13px;  --t-small-weight:400;--t-small-lh:20px;  /* 辅助信息 */
+  --t-code-size:13px;   --t-code-weight:400; --t-code-lh:22px;   /* 代码/快照 */
+  --t-chip-size:13px;   --t-chip-weight:500; --t-chip-lh:20px;   /* 引用胶囊 */
+
+  /* —— 间距（4px 基准；8pt 为主序列）—— */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px;
+  --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px;
+
+  /* —— 圆角 —— */
+  --r-xs:6px; --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-full:999px;
+
+  /* —— 阴影（蓝调投影，避免纯黑发灰）—— */
+  --shadow-sm:0 1px 2px rgb(17 26 46 / .06), 0 1px 3px rgb(17 26 46 / .04);
+  --shadow-md:0 2px 6px rgb(17 26 46 / .07), 0 6px 16px rgb(17 26 46 / .06);
+  --shadow-lg:0 12px 32px rgb(17 26 46 / .14), 0 2px 8px rgb(17 26 46 / .08);
+
+  /* —— 动效 —— */
+  --dur-fast:120ms; --dur:200ms; --dur-slow:320ms;
+  --ease:cubic-bezier(.2,.7,.3,1);
+
+  /* —— 尺寸 —— */
+  --topbar-h:60px;
+  --rail-w:264px;
+  --insights-w:336px;
+  --bubble-pad-x:14px;   /* 与 JS 紧贴宽度计算联动，勿单独修改 */
+  --bubble-pad-y:11px;
+  --bubble-border-w:1px; /* 同上：JS 计算可用内容宽度时需要减掉左右边框 */
+}
+
+/* —— 深色主题：深蓝为底，橙色提亮 —— */
+[data-theme="dark"]{
+  color-scheme:dark;
+  --bg-page:#0B1220;
+  --bg-card:#111A2E;
+  --bg-subtle:#1E293B;
+  --bg-primary-soft:#16244A;
+  --bg-accent-soft:#2A1B10;
+  --text-primary:#E8EEF9;
+  --text-secondary:#A9B8D0;
+  --text-muted:#A9B8D0;
+  --text-placeholder:#A9B8D0;
+  --primary:#6096FF;
+  --primary-hover:#93BAFF;
+  --accent:#FFAE6E;
+  --accent-decor:#FFAE6E;
+  --accent-text:#FFAE6E;
+  --focus:#6096FF;
+  --border:#2B3956;
+  --border-strong:#3E4E70;
+  --success:#4ADE80; --warning:#FBBF24; --danger:#F87171;
+  --success-soft:#0F2A1B; --warning-soft:#2C2410; --danger-soft:#2E1618;
+  --slate-550:#A9B8D0;
+  --shadow-sm:0 1px 2px rgb(0 0 0 / .4);
+  --shadow-md:0 4px 14px rgb(0 0 0 / .45);
+  --shadow-lg:0 16px 40px rgb(0 0 0 / .55);
+}
+
+/* ═══════════════ 2. 基础与重置 ═══════════════ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  display:flex; flex-direction:column;
+  height:100dvh; overflow:hidden;
+  background:var(--bg-page); color:var(--text-primary);
+  font-family:var(--font-sans);
+  font-size:var(--t-body-size); line-height:var(--t-body-lh);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  /* 中文排版微调 */
+  text-spacing-trim:trim-start;
+}
+h1,h2,h3,h4,p,ul,ol,figure{margin:0}
+ul,ol{padding:0;list-style:none}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0}
+svg{display:block}
+a{color:var(--primary)}
+/* 中文逐字换行更自然；同时避免长英文撑破气泡 */
+:where(p,li,span,div){overflow-wrap:break-word}
+
+/* 焦点可见性：3px 环 + 2px 偏移，与相邻色对比 3.86:1（页面底） */
+:focus-visible{
+  outline:3px solid var(--focus);
+  outline-offset:2px;
+  border-radius:var(--r-xs);
+}
+:focus:not(:focus-visible){outline:none}
+
+/* 屏幕阅读器专用 */
+.sr-only{
+  position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+}
+
+/* 跳转链接：键盘用户第一站 */
+.skip-link{
+  position:absolute;left:var(--sp-4);top:var(--sp-3);z-index:200;
+  transform:translateY(-200%);
+  background:var(--primary);color:var(--white);
+  padding:var(--sp-3) var(--sp-4);border-radius:var(--r-sm);
+  font-size:var(--t-small-size);font-weight:600;text-decoration:none;
+  box-shadow:var(--shadow-md);
+  transition:transform var(--dur) var(--ease);
+}
+.skip-link:focus{transform:none}
+
+/* 统一的移动端最小点按高度 44px（宽度保持 38px：满足 WCAG 2.5.8 的 24×24，
+   同时避免在 320px 顶栏里把品牌名挤到换行/裁切） */
+.tap{min-height:44px}
+
+/* ═══════════════ 3. 顶栏 ═══════════════ */
+.topbar{
+  flex:0 0 auto; height:var(--topbar-h);
+  display:flex; align-items:center; gap:var(--sp-3);
+  padding:0 var(--sp-4);
+  background:var(--bg-card);
+  border-bottom:1px solid var(--border);
+  position:relative; z-index:40;
+}
+.topbar__toggle{display:none}
+.brand{display:flex;align-items:center;gap:var(--sp-2);min-width:0}
+.brand__mark{flex:0 0 auto;border-radius:9px}
+.brand__text{display:flex;flex-direction:column;min-width:0}
+.brand__name{font-size:14px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+.brand__sub{font-size:11px;color:var(--text-muted);line-height:14px;white-space:nowrap}
+.topbar__divider{width:1px;height:24px;background:var(--border);margin-inline:var(--sp-2)}
+.scope{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:6px var(--sp-3);border-radius:var(--r-full);
+  background:var(--bg-primary-soft);
+  border:1px solid var(--blue-200);
+  font-size:var(--t-small-size);font-weight:600;color:var(--blue-700);
+  max-width:min(46vw,320px);
+}
+[data-theme="dark"] .scope{color:var(--primary);border-color:var(--border)}
+.scope__dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+.scope__label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar__spacer{flex:1 1 auto}
+.topbar__actions{display:flex;align-items:center;gap:var(--sp-1)}
+.icon-btn{
+  width:38px;height:38px;display:grid;place-items:center;border-radius:var(--r-sm);
+  color:var(--text-secondary);transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.icon-btn:hover{background:var(--bg-subtle);color:var(--text-primary)}
+.avatar{
+  width:34px;height:34px;border-radius:var(--r-full);flex:0 0 auto;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--blue-500),var(--blue-700));
+  color:var(--white);font-size:12px;font-weight:700;letter-spacing:.5px;
+}
+
+/* ═══════════════ 4. 主框架（网格区域，天然响应式） ═══════════════ */
+.shell{
+  flex:1 1 auto; min-height:0;
+  display:grid;
+  grid-template-columns:var(--rail-w) minmax(0,1fr) var(--insights-w);
+  grid-template-areas:"rail thread insights";
+}
+.rail{grid-area:rail}
+.thread{grid-area:thread}
+.insights{grid-area:insights}
+
+/* ═══════════════ 5. 左侧会话栏 ═══════════════ */
+.rail{
+  display:flex;flex-direction:column;min-height:0;
+  background:var(--bg-card);
+  border-right:1px solid var(--border);
+}
+.rail__top{padding:var(--sp-4) var(--sp-3) var(--sp-3)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  min-height:44px;padding:0 var(--sp-4);
+  border-radius:var(--r-sm);font-size:14px;font-weight:600;
+  transition:background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease);
+  white-space:nowrap;
+}
+.btn:active{transform:translateY(1px)}
+.btn--primary{background:var(--primary);color:var(--white);box-shadow:var(--shadow-sm)}
+.btn--primary:hover{background:var(--primary-hover)}
+[data-theme="dark"] .btn--primary{color:var(--slate-950)}
+[data-theme="dark"] .btn--primary:hover{background:var(--primary-hover);color:var(--slate-950)}
+.btn--ghost{background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border)}
+.btn--ghost:hover{background:var(--bg-subtle);color:var(--text-primary);border-color:var(--border-strong)}
+.btn--accent{background:var(--accent);color:var(--white)}
+.btn--accent:hover{background:var(--accent-text)}
+[data-theme="dark"] .btn--accent{color:var(--slate-950)}
+.btn--block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+.rail__scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:0 var(--sp-3) var(--sp-3);overscroll-behavior:contain}
+.rail__group + .rail__group{margin-top:var(--sp-4)}
+.rail__group-title{
+  font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--text-muted);
+  padding:var(--sp-2) var(--sp-3);text-transform:none;
+}
+.session{
+  display:flex;align-items:flex-start;gap:var(--sp-2);width:100%;text-align:left;
+  padding:var(--sp-3);border-radius:var(--r-sm);
+  color:var(--text-secondary);
+  transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.session:hover{background:var(--bg-subtle);color:var(--text-primary)}
+/* 当前会话：左侧蓝色指示条 + 背景，不单靠颜色区分（同时有 aria-current 与粗体） */
+.session[aria-current="true"]{
+  background:var(--bg-primary-soft);color:var(--primary-hover);font-weight:600;
+  box-shadow:inset 3px 0 0 var(--primary);
+}
+[data-theme="dark"] .session[aria-current="true"]{color:var(--primary)}
+.session__icon{flex:0 0 auto;color:currentColor;opacity:.85;margin-top:1px}
+.session__body{min-width:0;flex:1 1 auto}
+.session__title{
+  font-size:13.5px;line-height:19px;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+}
+.session__meta{font-size:11.5px;line-height:16px;color:var(--text-muted);margin-top:2px;font-weight:400}
+
+.rail__foot{flex:0 0 auto;border-top:1px solid var(--border);padding:var(--sp-3)}
+.engines{display:flex;flex-direction:column;gap:var(--sp-2)}
+.engines__title{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--text-muted)}
+.engine{
+  display:flex;align-items:center;gap:var(--sp-2);
+  font-size:12.5px;color:var(--text-secondary);
+}
+/* 状态点：颜色 + 文字标签双通道 */
+.dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 18%,transparent)}
+.dot--on{background:var(--success);color:var(--success)}
+.dot--warn{background:var(--warning);color:var(--warning)}
+.dot--off{background:var(--slate-400);color:var(--slate-400)}
+.engine__state{margin-left:auto;font-size:11.5px;color:var(--text-muted)}
+
+/* ═══════════════ 6. 中间对话区 ═══════════════ */
+.thread{
+  display:flex;flex-direction:column;min-height:0;min-width:0;
+  background:var(--bg-page);
+  position:relative;
+}
+.thread__head{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-4);
+  background:var(--bg-card);border-bottom:1px solid var(--border);
+}
+.thread__title{font-size:15px;font-weight:700;line-height:20px}
+.thread__meta{font-size:12px;color:var(--text-muted);line-height:16px;margin-top:1px}
+.thread__head-actions{margin-left:auto;display:flex;gap:var(--sp-1)}
+
+/* 对话记录：唯一滚动容器；可键盘聚焦以便滚动查看 */
+.chat-log{
+  flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:var(--sp-5) var(--sp-4) var(--sp-4);
+  scroll-behavior:smooth;
+  display:flex;flex-direction:column;gap:var(--sp-5);
+}
+.chat-log__inner{max-width:820px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:var(--sp-5)}
+
+.msg{display:flex;gap:var(--sp-3);align-items:flex-start}
+.msg--user{flex-direction:row-reverse}
+.msg__avatar{
+  flex:0 0 auto;width:34px;height:34px;border-radius:var(--r-full);
+  display:grid;place-items:center;overflow:hidden;
+  background:var(--bg-card);border:1px solid var(--border);
+}
+.msg__col{min-width:0;max-width:100%;display:flex;flex-direction:column;gap:var(--sp-2)}
+.msg--user .msg__col{align-items:flex-end}
+.msg__who{
+  display:flex;align-items:center;gap:var(--sp-2);
+  font-size:12px;color:var(--text-muted);padding-inline:2px;
+}
+.msg__who strong{color:var(--text-secondary);font-weight:600}
+.badge-ai{
+  font-size:10.5px;font-weight:700;letter-spacing:.3px;
+  color:var(--accent-text);background:var(--bg-accent-soft);
+  border:1px solid var(--orange-200);
+  padding:1px 6px;border-radius:var(--r-full);
+}
+[data-theme="dark"] .badge-ai{border-color:#4A3320}
+
+/* 气泡：宽度由 Pretext 紧贴计算后写入 --bubble-w */
+.bubble{
+  width:var(--bubble-w,auto);max-width:100%;
+  padding:var(--bubble-pad-y) var(--bubble-pad-x);
+  border-radius:var(--r-lg);
+  background:var(--bg-card);
+  border:var(--bubble-border-w) solid var(--border);
+  box-shadow:var(--shadow-sm);
+  transition:width var(--dur-slow) var(--ease);
+}
+.msg--assistant .bubble{border-top-left-radius:var(--r-xs)}
+.msg--user .bubble{
+  border-top-right-radius:var(--r-xs);
+  background:var(--primary);color:var(--white);border-color:transparent;
+}
+[data-theme="dark"] .msg--user .bubble{color:var(--slate-950);background:var(--primary)}
+.bubble__lead{
+  font-size:var(--t-lead-size);font-weight:var(--t-lead-weight);line-height:var(--t-lead-lh);
+  margin-bottom:var(--sp-2);
+}
+.bubble__body{font-size:var(--t-body-size);font-weight:var(--t-body-weight);line-height:var(--t-body-lh)}
+.bubble__body p + p{margin-top:var(--sp-3)}
+.bubble__body strong{font-weight:var(--t-body-bold-weight)}
+.msg--user .bubble__body{font-weight:var(--t-body-strong-weight)}
+.bullets{margin-top:var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-2)}
+.bullets li{display:flex;gap:var(--sp-2);align-items:flex-start;font-size:var(--t-body-size);line-height:var(--t-body-lh)}
+.bullets li::before{
+  content:"";flex:0 0 auto;width:6px;height:6px;border-radius:2px;
+  background:var(--accent);margin-top:9px;
+}
+.kv{margin-top:var(--sp-3);display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.kv__item{
+  font-size:12.5px;line-height:18px;
+  background:var(--bg-subtle);border:1px solid var(--border);
+  border-radius:var(--r-xs);padding:4px 8px;color:var(--text-secondary);
+}
+.kv__item b{color:var(--text-primary);font-weight:700}
+
+/* 证据快照卡片（等宽字体，模拟真实 AI 回答原文） */
+.snapshot{
+  margin-top:var(--sp-3);
+  background:var(--bg-subtle);border:1px solid var(--border);
+  border-radius:var(--r-md);overflow:hidden;
+}
+.snapshot__head{
+  display:flex;align-items:center;gap:var(--sp-2);
+  padding:var(--sp-2) var(--sp-3);
+  border-bottom:1px solid var(--border);
+  font-size:11.5px;font-weight:600;color:var(--text-secondary);
+}
+.snapshot__head .dot{box-shadow:none}
+.snapshot__body{
+  padding:var(--sp-3);
+  font-family:var(--font-mono);
+  font-size:var(--t-code-size);line-height:var(--t-code-lh);
+  color:var(--text-secondary);
+  white-space:pre-wrap;word-break:break-word;
+}
+.snapshot__body mark{background:var(--bg-accent-soft);color:var(--accent-text);font-weight:600;padding:0 2px;border-radius:3px}
+
+/* 引用来源胶囊：prepared 时由 Pretext rich-inline 预估换行行数 → 预留高度 */
+.cites{margin-top:var(--sp-3);display:flex;flex-wrap:wrap;gap:var(--sp-2);min-height:var(--cites-h,auto)}
+.cite{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:var(--t-chip-size);font-weight:var(--t-chip-weight);line-height:var(--t-chip-lh);
+  padding:4px 9px;border-radius:var(--r-full);
+  background:var(--bg-primary-soft);border:1px solid var(--blue-200);
+  color:var(--blue-700);text-decoration:none;
+  transition:background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
+}
+.cite:hover{background:var(--blue-100);border-color:var(--blue-300)}
+[data-theme="dark"] .cite{color:var(--primary);border-color:var(--border);background:var(--bg-primary-soft)}
+.cite svg{flex:0 0 auto}
+.cite--site{background:var(--bg-accent-soft);border-color:var(--orange-200);color:var(--accent-text)}
+[data-theme="dark"] .cite--site{border-color:#4A3320;color:var(--accent-text)}
+
+/* 消息操作条：默认低视觉权重，hover/focus-within 时显现 —— 键盘用户同样可达 */
+.msg__actions{display:flex;gap:var(--sp-1);padding-inline:2px;opacity:0;transition:opacity var(--dur) var(--ease)}
+.msg:hover .msg__actions,.msg:focus-within .msg__actions{opacity:1}
+@media (hover:none){.msg__actions{opacity:1}}
+.act{
+  display:inline-flex;align-items:center;gap:5px;
+  min-height:32px;padding:0 var(--sp-2);border-radius:var(--r-xs);
+  font-size:11.5px;color:var(--text-muted);
+  transition:background var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.act:hover{background:var(--bg-subtle);color:var(--text-primary)}
+
+/* 流式输出光标 */
+.stream-caret{
+  display:inline-block;width:2px;height:1em;margin-left:2px;
+  background:var(--primary);vertical-align:-2px;
+  animation:caret 1s steps(2,start) infinite;
+}
+
+/* 错误态气泡：断网 / 请求失败。整块用浅红底 + 危险色标题，
+   并在操作条给出「重试」，而不是只留一句干巴巴的失败文案。 */
+.bubble--error{background:var(--danger-soft);border-color:var(--danger)}
+.bubble__lead--error{display:flex;align-items:center;gap:6px;color:var(--danger)}
+.bubble__lead--error svg{flex:0 0 auto}
+
+/* 已停止：用虚线边框区分「未完成」，并给出「继续生成」 */
+.bubble--stopped{border-style:dashed}
+.bubble__hint{
+  display:flex;align-items:center;gap:6px;
+  margin-top:var(--sp-2);padding-top:var(--sp-2);
+  border-top:1px dashed var(--border);
+  font-size:12px;color:var(--text-muted);
+}
+@keyframes caret{50%{opacity:0}}
+
+.typing{display:inline-flex;gap:4px;align-items:center;height:var(--t-body-lh)}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:bounce 1.2s var(--ease) infinite}
+.typing i:nth-child(2){animation-delay:.15s}
+.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+
+/* 回到底部 */
+.to-bottom{
+  position:absolute;left:50%;transform:translateX(-50%);
+  bottom:calc(100% + var(--sp-3));
+  display:inline-flex;align-items:center;gap:6px;
+  min-height:36px;padding:0 var(--sp-3);
+  border-radius:var(--r-full);
+  background:var(--bg-card);color:var(--text-primary);
+  border:1px solid var(--border);box-shadow:var(--shadow-md);
+  font-size:12.5px;font-weight:600;
+  opacity:0;pointer-events:none;transition:opacity var(--dur) var(--ease);
+}
+.to-bottom[data-show="true"]{opacity:1;pointer-events:auto}
+.composer-wrap{position:relative;flex:0 0 auto}
+
+/* 长会话：让浏览器跳过屏幕外消息的布局与绘制。
+   这相当于「浏览器原生虚拟化」——不需要 JS 记账，因此不会引入
+   滚动锚点漂移、高度估算误差这类虚拟列表的经典故障；
+   与 Pretext 的精确测量互补（Pretext 负责算得准，它负责不去算）。
+   contain-intrinsic-size 的 auto 关键字让浏览器记住每条消息的真实高度，
+   因此滚动条不会因为估算值而抖动。仅在消息数超过阈值时启用。 */
+.chat-log--long .msg{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 132px;
+}
+/* 流式气泡必须留在渲染树里，否则每次内容变化都会重新进入/离开包含块 */
+.chat-log--long .msg:last-child{content-visibility:visible}
+
+/* ═══════════════ 7. 输入区 ═══════════════ */
+.composer{
+  flex:0 0 auto;border-top:1px solid var(--border);
+  background:var(--bg-card);
+  padding:var(--sp-3) var(--sp-4) var(--sp-4);
+}
+.composer__inner{max-width:820px;margin:0 auto}
+.suggest{display:flex;gap:var(--sp-2);overflow-x:auto;padding-bottom:var(--sp-3);scrollbar-width:none}
+.suggest::-webkit-scrollbar{display:none}
+.suggest__chip{
+  flex:0 0 auto;
+  display:inline-flex;align-items:center;gap:6px;
+  min-height:34px;padding:0 var(--sp-3);border-radius:var(--r-full);
+  background:var(--bg-card);border:1px solid var(--border);
+  font-size:12.5px;color:var(--text-secondary);
+  transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease);
+}
+.suggest__chip:hover{border-color:var(--primary);color:var(--primary-hover);background:var(--bg-primary-soft)}
+[data-theme="dark"] .suggest__chip:hover{color:var(--primary)}
+.suggest__chip svg{color:var(--accent)}
+
+.field{
+  display:flex;align-items:flex-end;gap:var(--sp-2);
+  background:var(--bg-page);
+  border:1.5px solid var(--border-strong);   /* 修正：原 slate-400 仅 2.56:1 */
+  border-radius:var(--r-lg);
+  padding:var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease);
+}
+.field:focus-within{
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--focus) 20%,transparent);
+}
+.field textarea{
+  flex:1 1 auto;min-width:0;border:0;background:transparent;resize:none;
+  padding:var(--sp-2) 0;
+  font-size:var(--t-body-size);line-height:var(--t-body-lh);
+  max-height:180px;overflow-y:auto;
+  outline:none;
+}
+.field textarea::placeholder{color:var(--text-placeholder)}
+.send{
+  flex:0 0 auto;width:40px;height:40px;border-radius:var(--r-md);
+  display:grid;place-items:center;
+  background:var(--primary);color:var(--white);
+  transition:background var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease);
+}
+.send:hover{background:var(--primary-hover)}
+.send:active{transform:scale(.96)}
+.send[disabled]{background:var(--slate-300);color:var(--slate-600);cursor:not-allowed}
+/* 停止生成态：用危险色表达「中断」，形状同时从箭头变为方块（不只靠颜色传达） */
+.send--stop{background:var(--danger);color:var(--white)}
+.send--stop:hover{background:#A81F1F}
+[data-theme="dark"] .send--stop{color:var(--slate-950)}
+
+/* 断网提示：只在离线时出现 */
+.offline-note{display:none;align-items:center;gap:5px;color:var(--warning);font-weight:600}
+body[data-online="false"] .offline-note{display:inline-flex}
+[data-theme="dark"] .send{color:var(--slate-950)}
+[data-theme="dark"] .send[disabled]{background:var(--bg-subtle);color:var(--text-muted)}
+.composer__foot{
+  display:flex;align-items:center;gap:var(--sp-3);
+  margin-top:var(--sp-2);padding-inline:2px;
+  font-size:11.5px;color:var(--text-muted);
+}
+.composer__hint kbd{
+  font-family:var(--font-mono);font-size:10.5px;
+  background:var(--bg-subtle);border:1px solid var(--border);
+  border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--text-secondary);
+}
+.metrics-badge{
+  margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--text-muted);white-space:nowrap;
+}
+.metrics-badge code{font-family:var(--font-mono);font-size:10.5px}
+.metrics-badge .dot{box-shadow:none}
+
+/* ═══════════════ 8. 右侧诊断面板 ═══════════════ */
+.insights{
+  display:flex;flex-direction:column;min-height:0;
+  background:var(--bg-card);border-left:1px solid var(--border);
+  overflow-y:auto;overscroll-behavior:contain;
+  padding:var(--sp-4);
+  gap:var(--sp-4);
+}
+.insights__body{
+  display:flex;flex-direction:column;gap:var(--sp-4);
+}
+/* 作者样式里的 display:flex 会盖掉 [hidden] 的 UA 规则，必须显式兜住 */
+.insights__body[hidden]{display:none}
+/* 桌面端不折叠：开关隐藏，body 始终展开 */
+.insights__toggle{display:none}
+.card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:var(--sp-4);
+}
+.card--accent{
+  background:var(--bg-accent-soft);
+  border-color:var(--orange-200);
+}
+[data-theme="dark"] .card--accent{border-color:#4A3320}
+.card__head{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-3)}
+.card__title{font-size:13px;font-weight:700;letter-spacing:.2px}
+.card__more{margin-left:auto;font-size:11.5px;color:var(--text-muted)}
+
+/* 评分环：SVG 图形 aria-hidden，数值由文本承载 */
+.score{display:flex;align-items:center;gap:var(--sp-4)}
+.score__ring{position:relative;flex:0 0 auto;width:96px;height:96px}
+.score__ring svg{transform:rotate(-90deg)}
+.score__num{
+  position:absolute;inset:0;display:grid;place-items:center;
+  flex-direction:column;
+}
+.score__num b{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.5px}
+.score__num span{font-size:10.5px;color:var(--text-muted);margin-top:3px}
+.score__detail{min-width:0}
+.score__delta{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;font-weight:600;color:var(--success);
+  background:var(--success-soft);border-radius:var(--r-full);
+  padding:2px 8px;margin-bottom:var(--sp-2);
+}
+.score__note{font-size:12px;line-height:18px;color:var(--text-secondary)}
+
+/* 指标条：role=progressbar 语义 + 数值文本 */
+.metric{margin-top:var(--sp-3)}
+.metric:first-of-type{margin-top:0}
+.metric__row{display:flex;align-items:baseline;gap:var(--sp-2);margin-bottom:6px}
+.metric__name{font-size:12.5px;font-weight:600;color:var(--text-primary)}
+.metric__val{margin-left:auto;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.metric__val small{font-weight:400;color:var(--text-muted);font-size:11px}
+.bar{
+  height:7px;border-radius:var(--r-full);background:var(--bg-subtle);overflow:hidden;
+  position:relative;
+}
+.bar__fill{
+  display:block;height:100%;border-radius:var(--r-full);
+  width:0;background:var(--primary);
+  transition:width 640ms var(--ease);
+}
+.bar__fill--accent{background:var(--accent)}
+.bar__fill--muted{background:var(--slate-400)}
+.metric__hint{font-size:11.5px;color:var(--text-muted);margin-top:5px;line-height:16px}
+
+/* 竞品对比 */
+.rank{display:flex;flex-direction:column;gap:var(--sp-3)}
+.rank__row{display:grid;grid-template-columns:1fr auto;gap:2px var(--sp-2);align-items:center}
+.rank__name{font-size:12.5px;display:flex;align-items:center;gap:6px}
+.rank__name .you{color:var(--primary-hover);font-weight:700}
+[data-theme="dark"] .rank__name .you{color:var(--primary)}
+.rank__pct{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.rank__bar{grid-column:1/-1}
+
+/* 纠偏待办 */
+.todo{display:flex;gap:var(--sp-3);align-items:flex-start}
+.todo__icon{
+  flex:0 0 auto;width:32px;height:32px;border-radius:var(--r-sm);
+  display:grid;place-items:center;
+  background:var(--white);color:var(--accent);
+  border:1px solid var(--orange-200);
+}
+[data-theme="dark"] .todo__icon{background:var(--bg-card);border-color:#4A3320}
+.todo__title{font-size:13px;font-weight:700;line-height:18px}
+.todo__desc{font-size:12px;line-height:18px;color:var(--text-secondary);margin-top:3px}
+.todo__cta{margin-top:var(--sp-3)}
+
+/* 移动端抽屉背板 */
+.rail-backdrop{
+  position:fixed;inset:0;z-index:55;
+  background:rgb(11 18 32 / 48%);
+  opacity:0;pointer-events:none;
+  transition:opacity var(--dur) var(--ease);
+}
+.rail-backdrop[data-open="true"]{opacity:1;pointer-events:auto}
+
+/* ═══════════════ 9. 响应式 ═══════════════ */
+/* 平板：收起会话栏为抽屉，诊断面板保留 */
+@media (max-width:1199px){
+  .shell{
+    grid-template-columns:minmax(0,1fr) 320px;
+    grid-template-areas:"thread insights";
+  }
+  .topbar__toggle{display:grid}
+  .rail{
+    position:fixed;top:0;bottom:0;left:0;z-index:60;
+    width:288px;max-width:84vw;
+    transform:translateX(-102%);
+    visibility:hidden;
+    box-shadow:var(--shadow-lg);
+    transition:transform var(--dur) var(--ease),visibility 0s linear var(--dur);
+  }
+  .rail[data-open="true"]{transform:none;visibility:visible;transition:transform var(--dur) var(--ease),visibility 0s}
+}
+/* 手机：诊断面板转为顶部横向卡片条 */
+@media (max-width:899px){
+  :root{--topbar-h:56px}
+  .shell{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+    grid-template-areas:"insights" "thread";
+  }
+  /* 移动端：诊断面板变成「可折叠 + 有界横向卡片条」。
+     收起时只剩一行摘要，保证矮屏上输入区始终可见；
+     展开时卡片条高度有上界，内容超出由卡片内部滚动承接（信息不丢）。 */
+  .insights{
+    display:block;
+    border-left:0;border-bottom:1px solid var(--border);
+    overflow:visible;
+    padding:0;
+    gap:0;
+    max-height:none;
+  }
+  .insights__toggle{
+    display:flex;align-items:center;gap:var(--sp-2);
+    width:100%;min-height:44px;
+    padding:var(--sp-2) var(--sp-3);
+    color:var(--text-secondary);text-align:left;
+    transition:background var(--dur-fast) var(--ease);
+  }
+  .insights__toggle:hover{background:var(--bg-subtle)}
+  .insights__summary{
+    display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;
+    font-size:12px;color:var(--text-secondary);min-width:0;
+  }
+  .insights__summary b{font-size:15px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums}
+  .insights__sep{color:var(--border-strong)}
+  .insights__warn{color:var(--danger);font-weight:600}
+  .insights__toggle-label{margin-left:auto;display:flex;align-items:center}
+  .insights__chevron{color:var(--text-muted);transition:transform var(--dur) var(--ease);display:flex}
+  .insights__toggle[aria-expanded="true"] .insights__chevron{transform:rotate(180deg)}
+  .insights__body{
+    flex-direction:row;flex-wrap:nowrap;
+    overflow-x:auto;overflow-y:hidden;
+    padding:0 var(--sp-3) var(--sp-3);
+    gap:var(--sp-3);
+    scroll-snap-type:x proximity;
+    max-height:min(34vh,240px);
+  }
+  .insights__body > .card{
+    flex:0 0 auto;width:236px;
+    scroll-snap-align:start;
+    margin:0;
+    overflow-y:auto;              /* 内容超出时卡片内部滚动，信息不丢 */
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+  }
+  /* 手机上评分环横排更省高度 */
+  .score{gap:var(--sp-3)}
+  .score__ring{width:72px;height:72px}
+  .score__num b{font-size:21px}
+  .brand__sub{display:none}
+  .scope{max-width:38vw}
+  .chat-log{padding:var(--sp-4) var(--sp-3)}
+  .chat-log__inner{gap:var(--sp-4)}
+  .composer{padding:var(--sp-3) var(--sp-3) calc(var(--sp-3) + env(safe-area-inset-bottom))}
+  .bubble{max-width:100%}
+  .msg{gap:var(--sp-2)}
+  .msg__avatar{width:30px;height:30px}
+}
+@media (max-width:560px){
+  .topbar{padding:0 var(--sp-3);gap:var(--sp-2)}
+  .brand__name{font-size:13px}
+  .scope{display:none}
+  .topbar__divider{display:none}   /* 腾出宽度，避免品牌名被挤到裁切 */
+  .thread__head{padding:var(--sp-3)}
+  .thread__title{font-size:14px}
+  .insights__body > .card{width:210px;padding:var(--sp-3)}
+  .composer__hint{display:none}
+}
+/* 极窄屏（≤430px）：去掉装饰性头像，保证品牌名与控件不被裁切 */
+@media (max-width:430px){
+  .avatar{display:none}
+}
+
+/* ═══════════════ 10. 无障碍与偏好适配 ═══════════════ */
+/* 减少动效：关闭过渡/动画与流式打字 */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important;
+  }
+  .stream-caret{display:none}
+}
+/* 高对比度偏好：加重边框与文字 */
+@media (prefers-contrast:more){
+  :root{--border:#94A3B8;--border-strong:#475569;--text-muted:#3F4C60;--text-secondary:#2B3547}
+  [data-theme="dark"]{--border:#5A6A80;--border-strong:#8A9AB0;--text-muted:#D5DEEE;--text-secondary:#D5DEEE}
+  .card,.bubble,.snapshot,.field{border-width:2px}
+}
+/* Windows 高对比模式：交由系统配色，保留结构 */
+@media (forced-colors:active){
+  .btn,.bubble,.card,.field,.cite,.snapshot{border:1px solid CanvasText}
+  .bar__fill,.dot,.stream-caret{forced-color-adjust:none}
+  .session[aria-current="true"]{outline:2px solid Highlight;outline-offset:-2px}
+  .score__ring svg circle{forced-color-adjust:auto}
+}
+/* ═══════════════ 打印：诊断报告版式 ═══════════════
+   平台的最终产出是「诊断报告」—— 打印 / 另存为 PDF 是真实高频场景，
+   因此这里不是简单隐藏控件，而是重新组织成一份可交付文档：
+   抬头 → 对话正文（含证据快照）→ 诊断结论。
+   注意：.insights 在屏幕上可能是「已折叠」状态（hidden 属性），
+   打印时必须强制展开，否则报告会丢掉全部结论数据。 */
+.print-only{display:none}
+@media print{
+  @page{margin:16mm 14mm}
+  html,body{height:auto!important;overflow:visible!important;background:#fff!important;color:#000}
+  body{display:block;font-size:11pt;line-height:1.6}
+
+  /* 隐藏所有交互与导航外壳 */
+  .topbar,.rail,.rail-backdrop,.composer-wrap,.to-bottom,.msg__actions,
+  .skip-link,.suggest,.insights__toggle,.offline-note,.metrics-badge,
+  .composer__hint,.field,.send{display:none!important}
+
+  /* 报告抬头 */
+  .print-only{display:block}
+  .print-head{
+    border-bottom:1.5pt solid #000;padding-bottom:4mm;margin-bottom:6mm;
+  }
+  .print-head h1{font-size:16pt;margin:0 0 2mm;font-weight:700}
+  .print-head dl{display:grid;grid-template-columns:auto 1fr;gap:1mm 4mm;font-size:9.5pt;margin:0}
+  .print-head dt{color:#333;font-weight:600}
+  .print-head dd{margin:0}
+
+  /* 框架改为文档流 */
+  .shell{display:block!important;grid-template-areas:none!important}
+  .thread{display:block;background:#fff}
+  .thread__head{border:0;padding:0 0 3mm;background:#fff}
+  .thread__head-actions{display:none!important}
+  .thread__title{font-size:14pt}
+  .thread__meta{font-size:9.5pt}
+
+  .chat-log{overflow:visible!important;padding:0!important;display:block;height:auto}
+  .chat-log__inner{max-width:none;display:block}
+  .msg{display:block;margin-bottom:5mm;break-inside:avoid;page-break-inside:avoid}
+  .msg__avatar{display:none}
+  .msg__col{display:block;max-width:none}
+
+  /* 气泡改为「对话记录」样式：不依赖底色，黑白打印也分得清双方 */
+  .bubble{
+    width:auto!important;max-width:none!important;
+    background:#fff!important;color:#000!important;
+    border:0.75pt solid #666;border-radius:2mm;
+    box-shadow:none!important;padding:3mm 4mm;
+  }
+  .msg--user .bubble{border-left:3pt solid #000;background:#F2F2F2!important}
+  .msg--assistant .bubble{border-left:3pt solid #666}
+  .bubble--error,.bubble--stopped{border-style:dashed!important}
+  .bubble__lead{font-size:12pt}
+  .bubble__hint{display:block;color:#333}
+  .msg__who{font-size:9pt;color:#333}
+  .badge-ai{display:none}
+  .cites{gap:2mm}
+  .cite{
+    background:#fff!important;color:#000!important;
+    border:0.5pt solid #999!important;font-size:9pt;
+    word-break:break-all;     /* 打印时 URL 需要完整可见，允许断词 */
+  }
+  .snapshot{background:#F7F7F7!important;border:0.5pt solid #999}
+  .snapshot__body mark{background:#E8E8E8!important;color:#000!important}
+  .bullets li::before{background:#666}
+  .kv__item{background:#fff!important;border:0.5pt solid #999}
+
+  /* 诊断结论：屏幕上被折叠/右栏限制，打印时按文档流完整输出 */
+  .insights{
+    display:block!important;overflow:visible!important;
+    border:0!important;padding:0!important;max-height:none!important;
+    background:#fff!important;break-before:page;page-break-before:always;
+  }
+  /* hidden 属性只是 UA 的 display:none，作者!important 可覆盖 —— 报告不丢数据 */
+  .insights__body{display:block!important;max-height:none!important;overflow:visible!important;padding:0!important}
+  .insights__body > .card{width:auto!important;overflow:visible!important;max-height:none!important}
+  .card{
+    border:0.75pt solid #666!important;border-radius:2mm;
+    break-inside:avoid;page-break-inside:avoid;
+    margin-bottom:4mm;background:#fff!important;
+  }
+  .card--accent{background:#F7F7F7!important}
+  .card__title{font-size:11pt}
+  .score__ring{display:none}      /* 环形图打印后可读性差，用数值与说明代替 */
+  .score__num{position:static;display:block}
+  .score__num b{font-size:20pt}
+  .bar{background:#DDD!important;height:4mm;border:0.5pt solid #999}
+  .bar__fill{background:#555!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .bar__fill--accent,.bar__fill--muted{background:#777!important}
+  .todo__icon{display:none}
+  /* 打印不需要任何动效残留 */
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#chat-log">跳到对话内容</a>
+
+<!-- ═══════════ 顶栏 ═══════════ -->
+<header class="topbar">
+  <button class="icon-btn topbar__toggle tap" id="railToggle" type="button"
+          aria-label="打开会话列表" aria-expanded="false" aria-controls="rail">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M3 6h18M3 12h18M3 18h18"/>
+    </svg>
+  </button>
+
+  <div class="brand">
+    <svg class="brand__mark" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#3B76F6"/><stop offset="1" stop-color="#2559E0"/>
+        </linearGradient>
+      </defs>
+      <rect x="1" y="1" width="30" height="30" rx="9" fill="url(#brandGrad)"/>
+      <path d="M16 8.5a7.5 7.5 0 1 0 7.5 7.5" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".95"/>
+      <circle cx="23.5" cy="16" r="2.7" fill="#F76B0C"/>
+    </svg>
+    <span class="brand__text">
+      <span class="brand__name">GeoRecall 知荐</span>
+      <span class="brand__sub">生成式引擎优化平台</span>
+    </span>
+  </div>
+
+  <span class="topbar__divider" aria-hidden="true"></span>
+
+  <!-- 当前品牌作用域：AI 助手的上下文锚点 -->
+  <p class="scope" aria-label="当前诊断的品牌">
+    <span class="scope__dot" aria-hidden="true"></span>
+    <span class="scope__label">上九蒸馏所 · 云南昆明</span>
+  </p>
+
+  <span class="topbar__spacer"></span>
+
+  <div class="topbar__actions">
+    <button class="icon-btn tap" id="themeToggle" type="button" aria-label="切换到深色主题" aria-pressed="false">
+      <svg class="icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+      </svg>
+      <svg class="icon-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" hidden>
+        <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z"/>
+      </svg>
+    </button>
+    <button class="icon-btn tap" type="button" aria-label="帮助与快捷键说明">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.2"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.5-1.2 1-1.2 1.9"/>
+        <circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+    <span class="avatar" aria-hidden="true">上九</span>
+  </div>
+</header>
+
+<!-- ═══════════ 主框架 ═══════════ -->
+<div class="shell">
+
+  <!-- —— 会话栏 —— -->
+  <aside class="rail" id="rail" aria-label="会话与引擎状态">
+    <div class="rail__top">
+      <button class="btn btn--primary btn--block" id="newChat" type="button">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        新建对话
+      </button>
+    </div>
+
+    <nav class="rail__scroll" aria-label="历史会话">
+      <div class="rail__group">
+        <h2 class="rail__group-title">今天</h2>
+        <ul>
+          <li>
+            <button class="session" type="button" aria-current="true" data-thread="visibility">
+              <span class="session__icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <path d="M3 17.5 8 12l4 3.5L21 6"/><path d="M3 21h18"/>
+                </svg>
+              </span>
+              <span class="session__body">
+                <span class="session__title">豆包 / 千问 品牌可见度复核</span>
+                <span class="session__meta">刚刚 · 4 个引擎 24 条问句</span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button class="session" type="button" data-thread="correction">
+              <span class="session__icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <path d="M12 3.5 4.5 7v6c0 4 3.2 6.6 7.5 7.5 4.3-.9 7.5-3.5 7.5-7.5V7L12 3.5Z"/><path d="M9 12l2 2 4-4.5"/>
+                </svg>
+              </span>
+              <span class="session__body">
+                <span class="session__title">纠偏：AI 说的法定产区有误</span>
+                <span class="session__meta">今天 09:12 · 待复测</span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button class="session" type="button" data-thread="prompts">
+              <span class="session__icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <path d="M4 6h16M4 12h10M4 18h13"/>
+                </svg>
+              </span>
+              <span class="session__body">
+                <span class="session__title">生成高意图问句库</span>
+                <span class="session__meta">昨天 18:40 · 已生成 24 条</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="rail__group">
+        <h2 class="rail__group-title">近 7 天</h2>
+        <ul>
+          <li>
+            <button class="session" type="button" data-thread="source">
+              <span class="session__icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.6 2.4 14.4 0 17M12 3.5c-2.4 2.6-2.4 14.4 0 17"/>
+                </svg>
+              </span>
+              <span class="session__body">
+                <span class="session__title">信源缺口：企业官网结构化数据</span>
+                <span class="session__meta">10-01 · 涉及 3 个引擎</span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button class="session" type="button" data-thread="competitor">
+              <span class="session__icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <path d="M5 20V11M12 20V5M19 20v-6"/>
+                </svg>
+              </span>
+              <span class="session__body">
+                <span class="session__title">竞品推荐份额对比（大芹 / 崃州）</span>
+                <span class="session__meta">09-29 · 周报已导出</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="rail__foot">
+      <div class="engines">
+        <h2 class="engines__title">引擎采集状态</h2>
+        <p class="engine"><span class="dot dot--on" aria-hidden="true"></span>豆包<span class="engine__state">已采集 24 条</span></p>
+        <p class="engine"><span class="dot dot--warn" aria-hidden="true"></span>千问<span class="engine__state">部分失败</span></p>
+        <p class="engine"><span class="dot dot--on" aria-hidden="true"></span>Kimi<span class="engine__state">已采集 24 条</span></p>
+        <p class="engine"><span class="dot dot--off" aria-hidden="true"></span>DeepSeek<span class="engine__state">待配置</span></p>
+      </div>
+    </div>
+  </aside>
+  <div class="rail-backdrop" id="railBackdrop" data-open="false" hidden></div>
+
+  <!-- —— 对话主区 —— -->
+  <main class="thread" id="main">
+    <!-- 仅打印可见：把对话整理成一份可交付的诊断报告 -->
+    <div class="print-only print-head">
+      <h1>GeoRecall 知荐 · 品牌可见度诊断报告</h1>
+      <dl>
+        <dt>品牌</dt><dd>上九蒸馏所（云南昆明）</dd>
+        <dt>会话主题</dt><dd class="print-head__topic">品牌可见度复核</dd>
+        <dt>目标市场</dt><dd>中国大陆</dd>
+        <dt>启用问句</dt><dd>24 条（推荐 8 · 对比 6 · 场景 6 · 评价 4）</dd>
+        <dt>采集引擎</dt><dd>豆包 · 千问 · Kimi · DeepSeek（待配置）</dd>
+        <dt>生成时间</dt><dd id="printDate">—</dd>
+      </dl>
+    </div>
+
+    <div class="thread__head">
+      <div>
+        <h1 class="thread__title">品牌可见度复核 · 上九蒸馏所</h1>
+        <p class="thread__meta">目标市场 中国大陆 · 启用的问句 24 条 · 数据截至 2026-10-04 09:30</p>
+      </div>
+      <div class="thread__head-actions">
+        <button class="icon-btn tap" id="exportBtn" type="button" aria-label="导出本次诊断报告（Markdown）">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 对话流：静态种子内容，无 JS 也可阅读 -->
+    <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions text"
+         aria-label="与知荐助手的对话记录" tabindex="0">
+      <div class="chat-log__inner" id="chatInner">
+
+        <!-- 助手开场 -->
+        <article class="msg msg--assistant">
+          <span class="msg__avatar" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+              <rect x="1" y="1" width="30" height="30" rx="9" fill="#2559E0"/>
+              <path d="M16 8.5a7.5 7.5 0 1 0 7.5 7.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+              <circle cx="23.5" cy="16" r="2.7" fill="#F76B0C"/>
+            </svg>
+          </span>
+          <div class="msg__col">
+            <p class="msg__who"><strong>知荐助手</strong><span class="badge-ai">GEO COPILOT</span><time>09:30</time></p>
+            <div class="bubble" data-measure="body">
+              <div class="bubble__lead">已就绪。我基于你知识库中的 4 个引擎、24 条问句做诊断。</div>
+              <div class="bubble__body">
+                <p>你可以直接问我「品牌被提到了吗」「哪条描述说错了」「下一步该补哪个信源」。每个结论我都会附上可核验的来源，不会凭印象给建议。</p>
+              </div>
+            </div>
+            <div class="msg__actions">
+              <button class="act" type="button" data-act="copy">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M6 15V6a2 2 0 0 1 2-2h9"/></svg>
+                复制
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- 用户提问 -->
+        <article class="msg msg--user">
+          <span class="msg__avatar" aria-hidden="true">我</span>
+          <div class="msg__col">
+            <p class="msg__who"><strong>我</strong><time>09:31</time></p>
+            <div class="bubble" data-measure="body">
+              <div class="bubble__body"><p>帮我看下上九蒸馏所在豆包和千问里被提到了吗？</p></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 助手回答：含证据快照与引用来源 -->
+        <article class="msg msg--assistant">
+          <span class="msg__avatar" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+              <rect x="1" y="1" width="30" height="30" rx="9" fill="#2559E0"/>
+              <path d="M16 8.5a7.5 7.5 0 1 0 7.5 7.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+              <circle cx="23.5" cy="16" r="2.7" fill="#F76B0C"/>
+            </svg>
+          </span>
+          <div class="msg__col">
+            <p class="msg__who"><strong>知荐助手</strong><time>09:31</time></p>
+            <div class="bubble" data-measure="body">
+              <div class="bubble__lead">豆包已主动推荐，千问尚未进入候选池。</div>
+              <div class="bubble__body">
+                <p>我复核了 4 个引擎、24 条高意图问句。两家引擎的差异集中在「推荐类」问句上：豆包能在无品牌名的提问里主动列出你，千问则完全没有。</p>
+              </div>
+              <ul class="bullets">
+                <li>豆包：推荐份额 <strong>68%</strong>，24 条问句中被提及 16 次</li>
+                <li>千问：提及 <strong>0 次</strong>，「昆明哪家蒸馏酒厂靠谱」的回答里没有你</li>
+                <li>Kimi：提及 4 次，对产区与工艺的描述与知识库一致</li>
+              </ul>
+              <div class="kv">
+                <span class="kv__item">信源缺口 <b>1 个</b></span>
+                <span class="kv__item">待纠偏 <b>2 条</b></span>
+                <span class="kv__item">复测周期 <b>7 天</b></span>
+              </div>
+              <figure class="snapshot">
+                <figcaption class="snapshot__head">
+                  <span class="dot dot--on" aria-hidden="true"></span>
+                  AI 回答快照 · 千问 · 「昆明哪家蒸馏酒厂靠谱」
+                </figcaption>
+                <div class="snapshot__body">昆明较有代表性的蒸馏酒厂包括 <mark>大芹</mark>、<mark>崃州</mark> 等新兴品牌……（本条回答未提及「上九蒸馏所」）</div>
+              </figure>
+              <div class="cites" data-cites>
+                <!-- 来源明细路由：原型内指向平台自身的信源详情页，接入后端时替换为真实来源 URL。
+                     标注 target/rel 是为了在真实实现中跳转外部站点时不被反查 referrer。 -->
+                <a class="cite cite--site" href="https://geo.shangjiudistillery.cn/sources/official-site-structured-data"
+                   target="_blank" rel="noopener noreferrer" data-cite>企业官网 · 结构化数据</a>
+                <a class="cite" href="https://geo.shangjiudistillery.cn/sources/zhihu-ten-regions"
+                   target="_blank" rel="noopener noreferrer" data-cite>知乎回答 · 中国威士忌十大产区</a>
+                <a class="cite cite--site" href="https://geo.shangjiudistillery.cn/sources/llms-txt"
+                   target="_blank" rel="noopener noreferrer" data-cite>llms.txt</a>
+              </div>
+            </div>
+            <div class="msg__actions">
+              <button class="act" type="button" data-act="copy">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M6 15V6a2 2 0 0 1 2-2h9"/></svg>
+                复制
+              </button>
+              <button class="act" type="button" data-act="regen">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4h-4"/></svg>
+                重新生成
+              </button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+
+    <!-- 输入区 -->
+    <div class="composer-wrap">
+      <button class="to-bottom" id="toBottom" type="button" data-show="false">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg>
+        回到最新
+      </button>
+
+      <div class="composer">
+        <div class="composer__inner">
+          <div class="suggest" role="group" aria-label="推荐提问，点击填入输入框">
+            <button class="suggest__chip" type="button" data-suggest="帮我把「昆明蒸馏酒厂」词条的官网结构化数据补齐">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              补齐千问的信源缺口
+            </button>
+            <button class="suggest__chip" type="button" data-suggest="AI 说错了法定产区的描述，帮我走一遍纠偏流程">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              启动纠偏流程
+            </button>
+            <button class="suggest__chip" type="button" data-suggest="对比一下我们和大芹、崃州的 AI 推荐份额">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              竞品推荐份额对比
+            </button>
+            <button class="suggest__chip" type="button" data-suggest="生成一批海外市场的高意图问句，用英文提问">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              生成海外问句库
+            </button>
+          </div>
+
+          <form class="field" id="composerForm" novalidate>
+            <label class="sr-only" for="composerInput">向知荐助手提问</label>
+            <textarea id="composerInput" name="prompt" rows="1"
+                      placeholder="问我品牌可见度、信源缺口或纠偏方案…"
+                      aria-describedby="composerHint"></textarea>
+            <!-- 发送 / 停止：同一个按钮两态。流式期间变为「停止生成」，
+                 这是对话类产品的既有习惯，也避免用户找不到中断入口。 -->
+            <button class="send" id="sendBtn" type="submit" aria-label="发送">
+              <svg id="sendIcon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4.5 12h13"/><path d="m11.5 6 6 6-6 6"/>
+              </svg>
+              <svg id="stopIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden>
+                <rect x="6" y="6" width="12" height="12" rx="2.5"/>
+              </svg>
+            </button>
+          </form>
+
+          <p class="composer__foot">
+            <span class="composer__hint" id="composerHint">
+              <kbd>Enter</kbd> 发送 · <kbd>Shift</kbd>+<kbd>Enter</kbd> 换行 · <kbd>Esc</kbd> 停止生成
+            </span>
+            <span class="offline-note" id="offlineNote" role="status">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                <path d="M2 8.8a16 16 0 0 1 20 0"/><path d="M5.5 12.5a11 11 0 0 1 13 0"/><path d="M9 16.2a5.5 5.5 0 0 1 6 0"/>
+                <path d="m3 3 18 18"/>
+              </svg>
+              当前离线，回答将无法生成
+            </span>
+            <span class="metrics-badge" id="metricsBadge">
+              <span class="dot dot--off" aria-hidden="true"></span>
+              <span id="metricsText">文本测量：初始化中…</span>
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- —— 右侧诊断面板 —— -->
+  <aside class="insights" aria-label="品牌可见度诊断">
+    <!-- 折叠开关：仅移动端显示。收起时它同时充当「一行摘要」，
+         保证输入区在 320×700 这类矮屏上始终可见。 -->
+    <button class="insights__toggle" id="insightsToggle" type="button"
+            aria-expanded="true" aria-controls="insightsBody">
+      <span class="insights__summary" aria-hidden="true">
+        <b id="summaryScore">65</b>
+        <span>可见度</span>
+        <span class="insights__sep">·</span>
+        <span>豆包 68%</span>
+        <span class="insights__sep">·</span>
+        <span class="insights__warn">千问 0%</span>
+      </span>
+      <span class="insights__toggle-label">
+        <span class="sr-only">品牌可见度诊断</span>
+        <span class="insights__chevron" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </span>
+      </span>
+    </button>
+
+    <div class="insights__body" id="insightsBody"
+         data-scroll-region="品牌可见度诊断卡片，可横向滚动查看">
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title">品牌可见度总分</h2>
+        <span class="card__more">近 30 天</span>
+      </div>
+      <div class="score">
+        <!-- 图形 aria-hidden；语义由下方文本承载，避免重复播报 -->
+        <div class="score__ring">
+          <svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="true" focusable="false">
+            <circle cx="48" cy="48" r="40" fill="none" stroke="var(--bg-subtle)" stroke-width="9"/>
+            <circle id="scoreArc" cx="48" cy="48" r="40" fill="none" stroke="var(--primary)" stroke-width="9"
+                    stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3"/>
+          </svg>
+          <span class="score__num"><b id="scoreValue">—</b><span>满分 100</span></span>
+        </div>
+        <div class="score__detail">
+          <p class="score__delta">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
+            较上期 +6 分
+          </p>
+          <p class="score__note" id="scoreNote">豆包与 Kimi 提升明显；千问未采集到品牌，是主要失分项。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title">引擎覆盖与推荐份额</h2>
+        <span class="card__more">24 条问句</span>
+      </div>
+
+      <div class="metric">
+        <p class="metric__row"><span class="metric__name">豆包</span>
+          <span class="metric__val">68<small>%</small></span></p>
+        <div class="bar" role="progressbar" aria-label="豆包推荐份额" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100">
+          <span class="bar__fill" data-value="68"></span>
+        </div>
+        <p class="metric__hint">推荐类问句表现最好，建议保持现有内容节奏。</p>
+      </div>
+
+      <div class="metric">
+        <p class="metric__row"><span class="metric__name">千问</span>
+          <span class="metric__val">0<small>%</small></span></p>
+        <div class="bar" role="progressbar" aria-label="千问推荐份额" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <span class="bar__fill bar__fill--accent" data-value="0"></span>
+        </div>
+        <p class="metric__hint" style="color:var(--danger)">未进入候选池 —— 优先补齐企业官网结构化数据。</p>
+      </div>
+
+      <div class="metric">
+        <p class="metric__row"><span class="metric__name">Kimi</span>
+          <span class="metric__val">42<small>%</small></span></p>
+        <div class="bar" role="progressbar" aria-label="Kimi 推荐份额" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100">
+          <span class="bar__fill" data-value="42"></span>
+        </div>
+        <p class="metric__hint">描述准确度高，可用于沉淀可引用的长文内容。</p>
+      </div>
+
+      <div class="metric">
+        <p class="metric__row"><span class="metric__name">DeepSeek</span>
+          <span class="metric__val">—</span></p>
+        <div class="bar" role="progressbar" aria-label="DeepSeek 尚未采集" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <span class="bar__fill bar__fill--muted" data-value="0"></span>
+        </div>
+        <p class="metric__hint">待配置 API Key 后纳入采集。</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__head">
+        <h2 class="card__title">竞品推荐份额</h2>
+        <span class="card__more">豆包</span>
+      </div>
+      <div class="rank">
+        <div class="rank__row">
+          <span class="rank__name"><span class="you">上九蒸馏所（你）</span></span>
+          <span class="rank__pct">68%</span>
+          <span class="rank__bar bar" role="progressbar" aria-label="上九蒸馏所推荐份额" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100"><span class="bar__fill" data-value="68"></span></span>
+        </div>
+        <div class="rank__row">
+          <span class="rank__name">大芹</span>
+          <span class="rank__pct">81%</span>
+          <span class="rank__bar bar" role="progressbar" aria-label="大芹推荐份额" aria-valuenow="81" aria-valuemin="0" aria-valuemax="100"><span class="bar__fill bar__fill--muted" data-value="81"></span></span>
+        </div>
+        <div class="rank__row">
+          <span class="rank__name">崃州</span>
+          <span class="rank__pct">54%</span>
+          <span class="rank__bar bar" role="progressbar" aria-label="崃州推荐份额" aria-valuenow="54" aria-valuemin="0" aria-valuemax="100"><span class="bar__fill bar__fill--muted" data-value="54"></span></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card--accent">
+      <div class="card__head">
+        <h2 class="card__title">待处理纠偏 · 2 条</h2>
+      </div>
+      <div class="todo">
+        <span class="todo__icon" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 8.5v5"/><circle cx="12" cy="16.8" r=".9" fill="currentColor" stroke="none"/>
+            <path d="M12 3.5 3.5 19h17L12 3.5Z"/>
+          </svg>
+        </span>
+        <div>
+          <p class="todo__title">AI 把产区描述成了「四川邛崃」</p>
+          <p class="todo__desc">豆包在 3 条回答中引用了来源不明的第三方页面。建议用官网与国家标准信源覆盖后复测。</p>
+        </div>
+      </div>
+      <button class="btn btn--accent btn--block todo__cta" id="recheckBtn" type="button">开始纠偏与复测</button>
+    </section>
+    </div>
+  </aside>
+
+</div>
+
+<!-- 屏幕阅读器状态播报：只报「过程」，终稿内容由 role=log 播报，避免重复 -->
+<div class="sr-only" id="srStatus" role="status" aria-live="polite"></div>
+
+<!-- ═══════════ Pretext 文本测量引擎（经典脚本，file:// 亦可运行） ═══════════ -->
+<script>/*! @chenglou/pretext v0.0.9 — MIT — 未修改的上游源码打包产物。重建命令见 tools/build.mjs 顶部注释。 */
+"use strict";var Pretext=(()=>{var Ee=Object.defineProperty;var O0=Object.getOwnPropertyDescriptor;var I0=Object.getOwnPropertyNames;var b0=Object.prototype.hasOwnProperty;var W0=(e,t)=>{for(var n in t)Ee(e,n,{get:t[n],enumerable:!0})},w0=(e,t,n,x)=>{if(t&&typeof t=="object"||typeof t=="function")for(let i of I0(t))!b0.call(e,i)&&i!==n&&Ee(e,i,{get:()=>t[i],enumerable:!(x=O0(t,i))||x.enumerable});return e};var P0=e=>w0(Ee({},"__esModule",{value:!0}),e);var Cn={};W0(Cn,{clearCache:()=>B0,layout:()=>rn,layoutNextLine:()=>an,layoutNextLineRange:()=>cn,layoutNextRichInlineLineRange:()=>L0,layoutWithLines:()=>Fn,materializeLineRange:()=>sn,materializeRichInlineLineRange:()=>An,measureLineStats:()=>ln,measureNaturalWidth:()=>on,measureRichInlineStats:()=>gn,prepare:()=>xn,prepareRichInline:()=>hn,prepareWithSegments:()=>Te,setLocale:()=>fn,walkLineRanges:()=>un,walkRichInlineLineRanges:()=>En});var ze=["BN","BN","BN","BN","BN","BN","BN","BN","BN","S","B","S","WS","B","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","B","B","B","S","WS","ON","ON","ET","ET","ET","ON","ON","ON","ON","ON","ES","CS","ES","CS","CS","EN","EN","EN","EN","EN","EN","EN","EN","EN","EN","CS","ON","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","ON","ON","ON","BN","BN","BN","BN","BN","BN","B","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","CS","ON","ET","ET","ET","ET","ON","ON","ON","ON","L","ON","ON","BN","ON","ON","ET","ET","EN","EN","ON","L","ON","ON","ON","EN","L","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","L","L","L","L","L","L","L","L"],ge=[[697,698,"ON"],[706,719,"ON"],[722,735,"ON"],[741,749,"ON"],[751,767,"ON"],[768,879,"NSM"],[884,885,"ON"],[894,894,"ON"],[900,901,"ON"],[903,903,"ON"],[1014,1014,"ON"],[1155,1161,"NSM"],[1418,1418,"ON"],[1421,1422,"ON"],[1423,1423,"ET"],[1424,1424,"R"],[1425,1469,"NSM"],[1470,1470,"R"],[1471,1471,"NSM"],[1472,1472,"R"],[1473,1474,"NSM"],[1475,1475,"R"],[1476,1477,"NSM"],[1478,1478,"R"],[1479,1479,"NSM"],[1480,1535,"R"],[1536,1541,"AN"],[1542,1543,"ON"],[1544,1544,"AL"],[1545,1546,"ET"],[1547,1547,"AL"],[1548,1548,"CS"],[1549,1549,"AL"],[1550,1551,"ON"],[1552,1562,"NSM"],[1563,1610,"AL"],[1611,1631,"NSM"],[1632,1641,"AN"],[1642,1642,"ET"],[1643,1644,"AN"],[1645,1647,"AL"],[1648,1648,"NSM"],[1649,1749,"AL"],[1750,1756,"NSM"],[1757,1757,"AN"],[1758,1758,"ON"],[1759,1764,"NSM"],[1765,1766,"AL"],[1767,1768,"NSM"],[1769,1769,"ON"],[1770,1773,"NSM"],[1774,1775,"AL"],[1776,1785,"EN"],[1786,1808,"AL"],[1809,1809,"NSM"],[1810,1839,"AL"],[1840,1866,"NSM"],[1867,1957,"AL"],[1958,1968,"NSM"],[1969,1983,"AL"],[1984,2026,"R"],[2027,2035,"NSM"],[2036,2037,"R"],[2038,2041,"ON"],[2042,2044,"R"],[2045,2045,"NSM"],[2046,2069,"R"],[2070,2073,"NSM"],[2074,2074,"R"],[2075,2083,"NSM"],[2084,2084,"R"],[2085,2087,"NSM"],[2088,2088,"R"],[2089,2093,"NSM"],[2094,2136,"R"],[2137,2139,"NSM"],[2140,2143,"R"],[2144,2191,"AL"],[2192,2193,"AN"],[2194,2198,"AL"],[2199,2207,"NSM"],[2208,2249,"AL"],[2250,2273,"NSM"],[2274,2274,"AN"],[2275,2306,"NSM"],[2362,2362,"NSM"],[2364,2364,"NSM"],[2369,2376,"NSM"],[2381,2381,"NSM"],[2385,2391,"NSM"],[2402,2403,"NSM"],[2433,2433,"NSM"],[2492,2492,"NSM"],[2497,2500,"NSM"],[2509,2509,"NSM"],[2530,2531,"NSM"],[2546,2547,"ET"],[2555,2555,"ET"],[2558,2558,"NSM"],[2561,2562,"NSM"],[2620,2620,"NSM"],[2625,2626,"NSM"],[2631,2632,"NSM"],[2635,2637,"NSM"],[2641,2641,"NSM"],[2672,2673,"NSM"],[2677,2677,"NSM"],[2689,2690,"NSM"],[2748,2748,"NSM"],[2753,2757,"NSM"],[2759,2760,"NSM"],[2765,2765,"NSM"],[2786,2787,"NSM"],[2801,2801,"ET"],[2810,2815,"NSM"],[2817,2817,"NSM"],[2876,2876,"NSM"],[2879,2879,"NSM"],[2881,2884,"NSM"],[2893,2893,"NSM"],[2901,2902,"NSM"],[2914,2915,"NSM"],[2946,2946,"NSM"],[3008,3008,"NSM"],[3021,3021,"NSM"],[3059,3064,"ON"],[3065,3065,"ET"],[3066,3066,"ON"],[3072,3072,"NSM"],[3076,3076,"NSM"],[3132,3132,"NSM"],[3134,3136,"NSM"],[3142,3144,"NSM"],[3146,3149,"NSM"],[3157,3158,"NSM"],[3170,3171,"NSM"],[3192,3198,"ON"],[3201,3201,"NSM"],[3260,3260,"NSM"],[3276,3277,"NSM"],[3298,3299,"NSM"],[3328,3329,"NSM"],[3387,3388,"NSM"],[3393,3396,"NSM"],[3405,3405,"NSM"],[3426,3427,"NSM"],[3457,3457,"NSM"],[3530,3530,"NSM"],[3538,3540,"NSM"],[3542,3542,"NSM"],[3633,3633,"NSM"],[3636,3642,"NSM"],[3647,3647,"ET"],[3655,3662,"NSM"],[3761,3761,"NSM"],[3764,3772,"NSM"],[3784,3790,"NSM"],[3864,3865,"NSM"],[3893,3893,"NSM"],[3895,3895,"NSM"],[3897,3897,"NSM"],[3898,3901,"ON"],[3953,3966,"NSM"],[3968,3972,"NSM"],[3974,3975,"NSM"],[3981,3991,"NSM"],[3993,4028,"NSM"],[4038,4038,"NSM"],[4141,4144,"NSM"],[4146,4151,"NSM"],[4153,4154,"NSM"],[4157,4158,"NSM"],[4184,4185,"NSM"],[4190,4192,"NSM"],[4209,4212,"NSM"],[4226,4226,"NSM"],[4229,4230,"NSM"],[4237,4237,"NSM"],[4253,4253,"NSM"],[4957,4959,"NSM"],[5008,5017,"ON"],[5120,5120,"ON"],[5760,5760,"WS"],[5787,5788,"ON"],[5906,5908,"NSM"],[5938,5939,"NSM"],[5970,5971,"NSM"],[6002,6003,"NSM"],[6068,6069,"NSM"],[6071,6077,"NSM"],[6086,6086,"NSM"],[6089,6099,"NSM"],[6107,6107,"ET"],[6109,6109,"NSM"],[6128,6137,"ON"],[6144,6154,"ON"],[6155,6157,"NSM"],[6158,6158,"BN"],[6159,6159,"NSM"],[6277,6278,"NSM"],[6313,6313,"NSM"],[6432,6434,"NSM"],[6439,6440,"NSM"],[6450,6450,"NSM"],[6457,6459,"NSM"],[6464,6464,"ON"],[6468,6469,"ON"],[6622,6655,"ON"],[6679,6680,"NSM"],[6683,6683,"NSM"],[6742,6742,"NSM"],[6744,6750,"NSM"],[6752,6752,"NSM"],[6754,6754,"NSM"],[6757,6764,"NSM"],[6771,6780,"NSM"],[6783,6783,"NSM"],[6832,6877,"NSM"],[6880,6891,"NSM"],[6912,6915,"NSM"],[6964,6964,"NSM"],[6966,6970,"NSM"],[6972,6972,"NSM"],[6978,6978,"NSM"],[7019,7027,"NSM"],[7040,7041,"NSM"],[7074,7077,"NSM"],[7080,7081,"NSM"],[7083,7085,"NSM"],[7142,7142,"NSM"],[7144,7145,"NSM"],[7149,7149,"NSM"],[7151,7153,"NSM"],[7212,7219,"NSM"],[7222,7223,"NSM"],[7376,7378,"NSM"],[7380,7392,"NSM"],[7394,7400,"NSM"],[7405,7405,"NSM"],[7412,7412,"NSM"],[7416,7417,"NSM"],[7616,7679,"NSM"],[8125,8125,"ON"],[8127,8129,"ON"],[8141,8143,"ON"],[8157,8159,"ON"],[8173,8175,"ON"],[8189,8190,"ON"],[8192,8202,"WS"],[8203,8205,"BN"],[8207,8207,"R"],[8208,8231,"ON"],[8232,8232,"WS"],[8233,8233,"B"],[8234,8238,"BN"],[8239,8239,"CS"],[8240,8244,"ET"],[8245,8259,"ON"],[8260,8260,"CS"],[8261,8286,"ON"],[8287,8287,"WS"],[8288,8303,"BN"],[8304,8304,"EN"],[8308,8313,"EN"],[8314,8315,"ES"],[8316,8318,"ON"],[8320,8329,"EN"],[8330,8331,"ES"],[8332,8334,"ON"],[8352,8399,"ET"],[8400,8432,"NSM"],[8448,8449,"ON"],[8451,8454,"ON"],[8456,8457,"ON"],[8468,8468,"ON"],[8470,8472,"ON"],[8478,8483,"ON"],[8485,8485,"ON"],[8487,8487,"ON"],[8489,8489,"ON"],[8494,8494,"ET"],[8506,8507,"ON"],[8512,8516,"ON"],[8522,8525,"ON"],[8528,8543,"ON"],[8585,8587,"ON"],[8592,8721,"ON"],[8722,8722,"ES"],[8723,8723,"ET"],[8724,9013,"ON"],[9083,9108,"ON"],[9110,9257,"ON"],[9280,9290,"ON"],[9312,9351,"ON"],[9352,9371,"EN"],[9450,9899,"ON"],[9901,10239,"ON"],[10496,11123,"ON"],[11126,11263,"ON"],[11493,11498,"ON"],[11503,11505,"NSM"],[11513,11519,"ON"],[11647,11647,"NSM"],[11744,11775,"NSM"],[11776,11869,"ON"],[11904,11929,"ON"],[11931,12019,"ON"],[12032,12245,"ON"],[12272,12287,"ON"],[12288,12288,"WS"],[12289,12292,"ON"],[12296,12320,"ON"],[12330,12333,"NSM"],[12336,12336,"ON"],[12342,12343,"ON"],[12349,12351,"ON"],[12441,12442,"NSM"],[12443,12444,"ON"],[12448,12448,"ON"],[12539,12539,"ON"],[12736,12773,"ON"],[12783,12783,"ON"],[12829,12830,"ON"],[12880,12895,"ON"],[12924,12926,"ON"],[12977,12991,"ON"],[13004,13007,"ON"],[13175,13178,"ON"],[13278,13279,"ON"],[13311,13311,"ON"],[19904,19967,"ON"],[42128,42182,"ON"],[42509,42511,"ON"],[42607,42610,"NSM"],[42611,42611,"ON"],[42612,42621,"NSM"],[42622,42623,"ON"],[42654,42655,"NSM"],[42736,42737,"NSM"],[42752,42785,"ON"],[42888,42888,"ON"],[43010,43010,"NSM"],[43014,43014,"NSM"],[43019,43019,"NSM"],[43045,43046,"NSM"],[43048,43051,"ON"],[43052,43052,"NSM"],[43064,43065,"ET"],[43124,43127,"ON"],[43204,43205,"NSM"],[43232,43249,"NSM"],[43263,43263,"NSM"],[43302,43309,"NSM"],[43335,43345,"NSM"],[43392,43394,"NSM"],[43443,43443,"NSM"],[43446,43449,"NSM"],[43452,43453,"NSM"],[43493,43493,"NSM"],[43561,43566,"NSM"],[43569,43570,"NSM"],[43573,43574,"NSM"],[43587,43587,"NSM"],[43596,43596,"NSM"],[43644,43644,"NSM"],[43696,43696,"NSM"],[43698,43700,"NSM"],[43703,43704,"NSM"],[43710,43711,"NSM"],[43713,43713,"NSM"],[43756,43757,"NSM"],[43766,43766,"NSM"],[43882,43883,"ON"],[44005,44005,"NSM"],[44008,44008,"NSM"],[44013,44013,"NSM"],[64285,64285,"R"],[64286,64286,"NSM"],[64287,64296,"R"],[64297,64297,"ES"],[64298,64335,"R"],[64336,64450,"AL"],[64451,64466,"ON"],[64467,64829,"AL"],[64830,64847,"ON"],[64848,64911,"AL"],[64912,64913,"ON"],[64914,64967,"AL"],[64968,64975,"ON"],[64976,65007,"BN"],[65008,65020,"AL"],[65021,65023,"ON"],[65024,65039,"NSM"],[65040,65049,"ON"],[65056,65071,"NSM"],[65072,65103,"ON"],[65104,65104,"CS"],[65105,65105,"ON"],[65106,65106,"CS"],[65108,65108,"ON"],[65109,65109,"CS"],[65110,65118,"ON"],[65119,65119,"ET"],[65120,65121,"ON"],[65122,65123,"ES"],[65124,65126,"ON"],[65128,65128,"ON"],[65129,65130,"ET"],[65131,65131,"ON"],[65136,65278,"AL"],[65279,65279,"BN"],[65281,65282,"ON"],[65283,65285,"ET"],[65286,65290,"ON"],[65291,65291,"ES"],[65292,65292,"CS"],[65293,65293,"ES"],[65294,65295,"CS"],[65296,65305,"EN"],[65306,65306,"CS"],[65307,65312,"ON"],[65339,65344,"ON"],[65371,65381,"ON"],[65504,65505,"ET"],[65506,65508,"ON"],[65509,65510,"ET"],[65512,65518,"ON"],[65520,65528,"BN"],[65529,65533,"ON"],[65534,65535,"BN"],[65793,65793,"ON"],[65856,65932,"ON"],[65936,65948,"ON"],[65952,65952,"ON"],[66045,66045,"NSM"],[66272,66272,"NSM"],[66273,66299,"EN"],[66422,66426,"NSM"],[67584,67870,"R"],[67871,67871,"ON"],[67872,68096,"R"],[68097,68099,"NSM"],[68100,68100,"R"],[68101,68102,"NSM"],[68103,68107,"R"],[68108,68111,"NSM"],[68112,68151,"R"],[68152,68154,"NSM"],[68155,68158,"R"],[68159,68159,"NSM"],[68160,68324,"R"],[68325,68326,"NSM"],[68327,68408,"R"],[68409,68415,"ON"],[68416,68863,"R"],[68864,68899,"AL"],[68900,68903,"NSM"],[68904,68911,"AL"],[68912,68921,"AN"],[68922,68927,"AL"],[68928,68937,"AN"],[68938,68968,"R"],[68969,68973,"NSM"],[68974,68974,"ON"],[68975,69215,"R"],[69216,69246,"AN"],[69247,69290,"R"],[69291,69292,"NSM"],[69293,69311,"R"],[69312,69327,"AL"],[69328,69336,"ON"],[69337,69369,"AL"],[69370,69375,"NSM"],[69376,69423,"R"],[69424,69445,"AL"],[69446,69456,"NSM"],[69457,69487,"AL"],[69488,69505,"R"],[69506,69509,"NSM"],[69510,69631,"R"],[69633,69633,"NSM"],[69688,69702,"NSM"],[69714,69733,"ON"],[69744,69744,"NSM"],[69747,69748,"NSM"],[69759,69761,"NSM"],[69811,69814,"NSM"],[69817,69818,"NSM"],[69826,69826,"NSM"],[69888,69890,"NSM"],[69927,69931,"NSM"],[69933,69940,"NSM"],[70003,70003,"NSM"],[70016,70017,"NSM"],[70070,70078,"NSM"],[70089,70092,"NSM"],[70095,70095,"NSM"],[70191,70193,"NSM"],[70196,70196,"NSM"],[70198,70199,"NSM"],[70206,70206,"NSM"],[70209,70209,"NSM"],[70367,70367,"NSM"],[70371,70378,"NSM"],[70400,70401,"NSM"],[70459,70460,"NSM"],[70464,70464,"NSM"],[70502,70508,"NSM"],[70512,70516,"NSM"],[70587,70592,"NSM"],[70606,70606,"NSM"],[70608,70608,"NSM"],[70610,70610,"NSM"],[70625,70626,"NSM"],[70712,70719,"NSM"],[70722,70724,"NSM"],[70726,70726,"NSM"],[70750,70750,"NSM"],[70835,70840,"NSM"],[70842,70842,"NSM"],[70847,70848,"NSM"],[70850,70851,"NSM"],[71090,71093,"NSM"],[71100,71101,"NSM"],[71103,71104,"NSM"],[71132,71133,"NSM"],[71219,71226,"NSM"],[71229,71229,"NSM"],[71231,71232,"NSM"],[71264,71276,"ON"],[71339,71339,"NSM"],[71341,71341,"NSM"],[71344,71349,"NSM"],[71351,71351,"NSM"],[71453,71453,"NSM"],[71455,71455,"NSM"],[71458,71461,"NSM"],[71463,71467,"NSM"],[71727,71735,"NSM"],[71737,71738,"NSM"],[71995,71996,"NSM"],[71998,71998,"NSM"],[72003,72003,"NSM"],[72148,72151,"NSM"],[72154,72155,"NSM"],[72160,72160,"NSM"],[72193,72198,"NSM"],[72201,72202,"NSM"],[72243,72248,"NSM"],[72251,72254,"NSM"],[72263,72263,"NSM"],[72273,72278,"NSM"],[72281,72283,"NSM"],[72330,72342,"NSM"],[72344,72345,"NSM"],[72544,72544,"NSM"],[72546,72548,"NSM"],[72550,72550,"NSM"],[72752,72758,"NSM"],[72760,72765,"NSM"],[72850,72871,"NSM"],[72874,72880,"NSM"],[72882,72883,"NSM"],[72885,72886,"NSM"],[73009,73014,"NSM"],[73018,73018,"NSM"],[73020,73021,"NSM"],[73023,73029,"NSM"],[73031,73031,"NSM"],[73104,73105,"NSM"],[73109,73109,"NSM"],[73111,73111,"NSM"],[73459,73460,"NSM"],[73472,73473,"NSM"],[73526,73530,"NSM"],[73536,73536,"NSM"],[73538,73538,"NSM"],[73562,73562,"NSM"],[73685,73692,"ON"],[73693,73696,"ET"],[73697,73713,"ON"],[78912,78912,"NSM"],[78919,78933,"NSM"],[90398,90409,"NSM"],[90413,90415,"NSM"],[92912,92916,"NSM"],[92976,92982,"NSM"],[94031,94031,"NSM"],[94095,94098,"NSM"],[94178,94178,"ON"],[94180,94180,"NSM"],[113821,113822,"NSM"],[113824,113827,"BN"],[117760,117973,"ON"],[118e3,118009,"EN"],[118010,118012,"ON"],[118016,118451,"ON"],[118458,118480,"ON"],[118496,118512,"ON"],[118528,118573,"NSM"],[118576,118598,"NSM"],[119143,119145,"NSM"],[119155,119162,"BN"],[119163,119170,"NSM"],[119173,119179,"NSM"],[119210,119213,"NSM"],[119273,119274,"ON"],[119296,119361,"ON"],[119362,119364,"NSM"],[119365,119365,"ON"],[119552,119638,"ON"],[120513,120513,"ON"],[120539,120539,"ON"],[120571,120571,"ON"],[120597,120597,"ON"],[120629,120629,"ON"],[120655,120655,"ON"],[120687,120687,"ON"],[120713,120713,"ON"],[120745,120745,"ON"],[120771,120771,"ON"],[120782,120831,"EN"],[121344,121398,"NSM"],[121403,121452,"NSM"],[121461,121461,"NSM"],[121476,121476,"NSM"],[121499,121503,"NSM"],[121505,121519,"NSM"],[122880,122886,"NSM"],[122888,122904,"NSM"],[122907,122913,"NSM"],[122915,122916,"NSM"],[122918,122922,"NSM"],[123023,123023,"NSM"],[123184,123190,"NSM"],[123566,123566,"NSM"],[123628,123631,"NSM"],[123647,123647,"ET"],[124140,124143,"NSM"],[124398,124399,"NSM"],[124643,124643,"NSM"],[124646,124646,"NSM"],[124654,124655,"NSM"],[124661,124661,"NSM"],[124928,125135,"R"],[125136,125142,"NSM"],[125143,125251,"R"],[125252,125258,"NSM"],[125259,126063,"R"],[126064,126143,"AL"],[126144,126207,"R"],[126208,126287,"AL"],[126288,126463,"R"],[126464,126703,"AL"],[126704,126705,"ON"],[126706,126719,"AL"],[126720,126975,"R"],[126976,127019,"ON"],[127024,127123,"ON"],[127136,127150,"ON"],[127153,127167,"ON"],[127169,127183,"ON"],[127185,127221,"ON"],[127232,127242,"EN"],[127243,127247,"ON"],[127279,127279,"ON"],[127338,127343,"ON"],[127405,127405,"ON"],[127584,127589,"ON"],[127744,128728,"ON"],[128732,128748,"ON"],[128752,128764,"ON"],[128768,128985,"ON"],[128992,129003,"ON"],[129008,129008,"ON"],[129024,129035,"ON"],[129040,129095,"ON"],[129104,129113,"ON"],[129120,129159,"ON"],[129168,129197,"ON"],[129200,129211,"ON"],[129216,129217,"ON"],[129232,129240,"ON"],[129280,129623,"ON"],[129632,129645,"ON"],[129648,129660,"ON"],[129664,129674,"ON"],[129678,129734,"ON"],[129736,129736,"ON"],[129741,129756,"ON"],[129759,129770,"ON"],[129775,129784,"ON"],[129792,129938,"ON"],[129940,130031,"ON"],[130032,130041,"EN"],[130042,130042,"ON"],[131070,131071,"BN"],[196606,196607,"BN"],[262142,262143,"BN"],[327678,327679,"BN"],[393214,393215,"BN"],[458750,458751,"BN"],[524286,524287,"BN"],[589822,589823,"BN"],[655358,655359,"BN"],[720894,720895,"BN"],[786430,786431,"BN"],[851966,851967,"BN"],[917502,917759,"BN"],[917760,917999,"NSM"],[918e3,921599,"BN"],[983038,983039,"BN"],[1048574,1048575,"BN"],[1114110,1114111,"BN"]];function R0(e){if(e<=255)return ze[e];let t=0,n=ge.length-1;for(;t<=n;){let x=t+n>>1,i=ge[x];if(e<i[0]){n=x-1;continue}if(e>i[1]){t=x+1;continue}return i[2]}return"L"}function v0(e){let t=e.length;if(t===0)return null;let n=new Array(t),x=!1,i=0,r=null;for(let u=0;u<t;){let o=e.charCodeAt(u),s=o,l=1;if(o>=55296&&o<=56319&&u+1<t){let N=e.charCodeAt(u+1);N>=56320&&N<=57343&&(s=(o-55296<<10)+(N-56320)+65536,l=2)}let c=R0(s);(c==="R"||c==="AL"||c==="AN")&&(x=!0);for(let N=0;N<l;N++)n[u+N]=c;c==="B"&&(x&&(r??(r=new Int8Array(t)),r[u]=Je(n,r,i,u)),i=u+l,x=!1),u+=l}return x&&(r??(r=new Int8Array(t)),Je(n,r,i,t)),r}function Je(e,t,n,x){let i=0;for(let s=n;s<x;s++){let l=e[s];if(l==="L"){i=0;break}if(l==="R"||l==="AL"){i=1;break}}let r=i&1?"R":"L",u=r,o=u;for(let s=n;s<x;s++)e[s]==="NSM"?e[s]=o:o=e[s];o=u;for(let s=n;s<x;s++){let l=e[s];l==="EN"?e[s]=o==="AL"?"AN":"EN":(l==="R"||l==="L"||l==="AL")&&(o=l)}for(let s=n;s<x;s++)e[s]==="AL"&&(e[s]="R");for(let s=n+1;s<x-1;s++)e[s]==="ES"&&e[s-1]==="EN"&&e[s+1]==="EN"&&(e[s]="EN"),e[s]==="CS"&&(e[s-1]==="EN"||e[s-1]==="AN")&&e[s+1]===e[s-1]&&(e[s]=e[s-1]);for(let s=n;s<x;s++){if(e[s]!=="EN")continue;let l;for(l=s-1;l>=n&&e[l]==="ET";l--)e[l]="EN";for(l=s+1;l<x&&e[l]==="ET";l++)e[l]="EN"}for(let s=n;s<x;s++){let l=e[s];(l==="WS"||l==="ES"||l==="ET"||l==="CS")&&(e[s]="ON")}o=u;for(let s=n;s<x;s++){let l=e[s];l==="EN"?e[s]=o==="L"?"L":"EN":(l==="R"||l==="L")&&(o=l)}for(let s=n;s<x;s++){if(e[s]!=="ON")continue;let l=s+1;for(;l<x&&e[l]==="ON";)l++;let c=s>n?e[s-1]:u,N=l<x?e[l]:u,a=c!=="L"?"R":"L";if(a===(N!=="L"?"R":"L"))for(let h=s;h<l;h++)e[h]=a;s=l-1}for(let s=n;s<x;s++)e[s]==="ON"&&(e[s]=r);for(let s=n;s<x;s++){let l=e[s],c=i;i&1?(l==="L"||l==="AN"||l==="EN")&&c++:l==="R"?c++:(l==="AN"||l==="EN")&&(c+=2),t[s]=c}return i}function _e(e,t){let n=v0(e);if(n===null)return null;let x=new Int8Array(t.length);for(let i=0;i<t.length;i++)x[i]=n[t[i]];return x}var T0=/[ \t\n\r\f]+/g,y0=/[\t\n\r\f]| {2,}|^ | $/;function G0(e){if(!y0.test(e))return e;let t=e.replace(T0," ");return t.charCodeAt(0)===32&&(t=t.slice(1)),t.length>0&&t.charCodeAt(t.length-1)===32&&(t=t.slice(0,-1)),t}function K0(e){return/[\r\f]/.test(e)?e.replace(/\r\n/g,`
+`).replace(/[\r\f]/g,`
+`):e}var ae=null;function _(){return ae===null&&(ae=new Intl.Segmenter(void 0,{granularity:"grapheme"})),ae}var re=null,Be;function j0(){return re===null&&(re=new Intl.Segmenter(Be,{granularity:"word"})),re}function Ze(){ae=null,re=null}function Ve(e){let t=e&&e.length>0?e:void 0;Be!==t&&(Be=t,re=null)}var z0=/\p{Script=Arabic}/u,H=/\p{M}/u,ue=/\p{Nd}/u;function Ue(e){return z0.test(e)}var J0=/[\u3000-\u30FF\u3130-\u318F\u3400-\u4DBF\u4E00-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\uFF00-\uFFEF\u{20000}-\u{2A6DF}\u{2A700}-\u{2EE5D}\u{2F800}-\u{2FA1F}\u{30000}-\u{33479}]/u;function K(e){return J0.test(e)}function _0(e){let t=le(e);return t!==null&&(me.has(t)||q.has(t))}var U0=new Set(["\xA0","\u202F","\u2060","\uFEFF"]),H0=new Set(["-","\u2010","\u2013","\u2014"]);function Q0(e){let t=le(e);return t!==null&&U0.has(t)}function Y0(e){let t=le(e);return t!==null&&H0.has(t)}function Xe(e,t){return Q0(e)?!1:t?!(_0(e)||Y0(e)):!0}var me=new Set(["\uFF0C","\uFF0E","\uFF01","\uFF1A","\uFF1B","\uFF1F","\u3001","\u3002","\u30FB","\uFF09","\u3015","\u3009","\u300B","\u300D","\u300F","\u3011","\u3017","\u3019","\u301B","\u30FC","\u3005","\u303B","\u309D","\u309E","\u30FD","\u30FE"]),Fe=new Set(['"',"(","[","{","\xA1","\xBF","\u201C","\u2018","\u201A","\u201E","\xAB","\u2039","\u2E18","\uFF08","\u3014","\u3008","\u300A","\u300C","\u300E","\u3010","\u3016","\u3018","\u301A"]),De=new Set(["'","\u2019"]),q=new Set([".",",","!","?",":",";","\u060C","\u061B","\u061F","\u0964","\u0965","\u104A","\u104B","\u104C","\u104D","\u104F",")","]","}","%",'"',"\u201D","\u2019","\xBB","\u203A","\u2026"]),$0=new Set([":",".","\u060C","\u061B"]),q0=new Set(["\u104F"]),Z0=new Set(["\u201D","\u2019","\xBB","\u203A","\u300D","\u300F","\u3011","\u300B","\u3009","\u3015","\uFF09"]);function V0(e){if(Le(e))return!0;let t=!1;for(let n of e){if(q.has(n)||Z(n)){t=!0;continue}if(!(t&&H.test(n)))return!1}return t}function X0(e){for(let t of e)if(!me.has(t)&&!q.has(t))return!1;return e.length>0}function et(e){if(Le(e))return!0;for(let t of e)if(!Fe.has(t)&&!De.has(t)&&!H.test(t)&&!Z(t))return!1;return e.length>0}function Le(e){let t=!1;for(let n of e)if(!(n==="\\"||H.test(n))){if(Fe.has(n)||q.has(n)||De.has(n)){t=!0;continue}return!1}return t}function X(e,t){let n=t-1;if(n<=0)return Math.max(n,0);let x=e.charCodeAt(n);if(x<56320||x>57343)return n;let i=n-1;if(i<0)return n;let r=e.charCodeAt(i);return r>=55296&&r<=56319?i:n}function le(e){if(e.length===0)return null;let t=X(e,e.length);return e.slice(t)}function tt(e){for(let t of e)if(!H.test(t))return t;return null}function ke(e,t=e.length){for(;t>0;){let n=X(e,t),x=e.slice(n,t);if(!H.test(x))return x;t=n}return null}var nt=[36,37,43,43,92,92,162,165,176,177,1423,1423,1545,1547,1642,1642,2046,2047,2546,2547,2553,2555,2801,2801,3065,3065,3449,3449,3647,3647,6107,6107,8240,8247,8279,8279,8352,8399,8451,8451,8457,8457,8470,8470,8722,8723,43064,43064,65020,65020,65129,65130,65284,65285,65504,65505,65509,65510,73693,73696,123647,123647,126124,126124,126128,126128];function xt(e,t){for(let n=0;n<t.length;n+=2)if(e>=t[n]&&e<=t[n+1])return!0;return!1}function Z(e){let t=e.codePointAt(0);return t!==void 0&&xt(t,nt)}function it(e){let t=ke(e);return t!==null&&Z(t)}function rt(e){let t=tt(e);return t!==null&&ue.test(t)}function st(e){let t=e.length;for(;t>0;){let n=X(e,t),x=e.slice(n,t);if(H.test(x)||Fe.has(x)||De.has(x)){t=n;continue}break}return t<=0||t===e.length?null:{head:e.slice(0,t),tail:e.slice(t)}}function ut(e,t,n){return n==="text"&&!t&&e.length===1&&e!=="-"&&e!=="\u2014"?e:null}function He(e,t){return e&&t!==null&&$0.has(t)}function lt(e){let t=le(e);return t!==null&&q0.has(t)}function ot(e){if(e.length<2||e[0]!==" ")return null;let t=e.slice(1);return/^\p{M}+$/u.test(t)?{space:" ",marks:t}:null}function pe(e){let t=e.length;for(;t>0;){let n=X(e,t),x=e.slice(n,t);if(Z0.has(x))return!0;if(!q.has(x))return!1;t=n}return!1}function at(e,t){if(t==="pre-wrap"){if(e===" ")return"preserved-space";if(e==="	")return"tab";if(e===`
+`)return"hard-break"}return e===" "?"space":e==="\xA0"||e==="\u202F"||e==="\u2060"||e==="\uFEFF"?"glue":e==="\u200B"?"zero-width-break":e==="\xAD"?"soft-hyphen":"text"}var ct=/[\x20\t\n\xA0\xAD\u200B\u202F\u2060\uFEFF]/;function Q(e){return e.length===1?e[0]:e.join("")}function Qe(e,t){let n=[];for(let x=e.length-1;x>=0;x--)n.push(e[x]);return n.push(t),Q(n)}function Ft(e,t,n,x){if(!ct.test(e))return[{text:e,isWordLike:t,kind:"text",start:n}];let i=[],r=null,u=0,o=!1,s=0;for(let l of e){let c=at(l,x),N=c==="text"&&t;if(r!==null&&c===r&&N===o){s+=l.length;continue}r!==null&&i.push({text:e.slice(u,s),isWordLike:o,kind:r,start:n+u}),r=c,u=s,o=N,s+=l.length}return r!==null&&i.push({text:e.slice(u),isWordLike:o,kind:r,start:n+u}),i}function Ce(e){return e==="space"||e==="preserved-space"||e==="zero-width-break"||e==="hard-break"}var ft=/^[A-Za-z][A-Za-z0-9+.-]*:$/;function Ye(e,t){let n=e.texts[t];return n.startsWith("www.")?!0:ft.test(n)&&t+1<e.len&&e.kinds[t+1]==="text"&&e.texts[t+1]==="//"}function Nt(e){return e.includes("?")&&(e.includes("://")||e.startsWith("www."))}function dt(e,t,n){let x=[],i=[],r=[],u=[];for(let o=0;o<e.len;o++){let s=e.starts[o],l=e.texts[o],c=e.isWordLike[o],N=e.kinds[o],a=-1;if(N==="text"&&Ye(e,o)){let M=[l],B=o+1;for(;B<e.len&&!Ce(e.kinds[B])&&U(t,e.starts[B],n)!==!1;){a<0&&Ye(e,B)&&(a=e.starts[B]);let L=e.texts[B];if(M.push(L),c=!0,B++,L.includes("?"))break}l=Q(M),o=B-1}if(x.push(l),i.push(c),r.push(N),u.push(s),!Nt(l))continue;let F=o+1;if(F>=e.len||Ce(e.kinds[F]))continue;let h=[],A=a<0?e.starts[F]:a,S=F;for(;S<e.len&&!Ce(e.kinds[S])&&U(t,e.starts[S],n)!==!1;)h.push(e.texts[S]),S++;h.length>0&&(x.push(Q(h)),i.push(!0),r.push("text"),u.push(A),o=S-1)}return{len:x.length,texts:x,isWordLike:i,kinds:r,starts:u}}var ht=new Set([":","-","/","\xD7",",",".","+","\u2013","\u2014"]),St=/[\p{P}\p{S}\p{Co}]/u,e0=/\p{Emoji_Presentation}/u,At=new Set(["?","\u058A","-","\u2010","\u2012","\u2013","\u2014","\u2026","\u203C","\u203D","\u2049"]);function Et(e){return e>=33&&e<=47&&e!==45||e>=58&&e<=64&&e!==63||e>=91&&e<=96||e>=123&&e<=126}function t0(e){let t=e.charCodeAt(0);return t<128?Et(t):!At.has(e)&&!e0.test(e)&&St.test(e)}function $e(e){let t=!1;for(let n of e)if(!H.test(n)){if(!t0(n))return!1;t=!0}return t}function gt(e){for(let t=e.length;t>0;){let n=X(e,t),x=e.slice(n,t);if(H.test(x)){t=n;continue}return t0(x)||Z(x)}return!1}var Me=/[A-Za-z#&*<=>@^_`~]/;function n0(e,t){return e.charCodeAt(0)<128&&t.charCodeAt(0)<128}function U(e,t,n){if(!n.geckoAsciiLineBreaks||t<=0||t>=e.length)return null;let x=ke(e,t),i=String.fromCodePoint(e.codePointAt(t));if(x===null||!n0(x,i))return null;let r=Z(x),u=Z(i);return!r&&!u?null:!!(i===")"||i==="]"||i==="}"||"!,.:;?/".includes(i)||"([{".includes(x)||x==='"'||x==="'"||i==='"'||i==="'"||i==="|"||i==="-"||r&&Me.test(i)||Me.test(x)&&u||u&&(")]}".includes(x)||/[0-9]/.test(x))||r&&("([{".includes(i)||/[0-9]/.test(i)))}function ce(e,t,n,x=e.length){let i=t[0];if(i===void 0||!"([{".includes(i))return null;let r=ke(e,x);return r===null?null:n.geckoAsciiLineBreaks&&n0(r,i)?Me.test(r)||ue.test(r)||`"'([{`.includes(r)||Z(r):r.charCodeAt(0)>=128?!K(r)&&/[\p{L}\p{N}]/u.test(r)?!0:null:/[A-Za-z0-9]/.test(r)||"$'(/<@[^_`{".includes(r)}function Ct(e,t,n,x,i){if(n[0]==="-"&&K(e))return!0;if(K(e)||K(n))return!1;let r=ce(e,n,i);if(r!==null)return r;let u=!t&&$e(e),o=!x&&$e(n),s=it(e),l=(t||s)&&gt(e);return!u&&!o&&!l?!1:(t||u||s)&&(x||o)}function qe(e){for(let t of e)if(ue.test(t))return!0;return!1}function se(e){if(e.length===0)return!1;for(let t of e)if(!(ue.test(t)||ht.has(t)))return!1;return!0}function Bt(e,t,n){let x=[],i=[],r=[],u=[];function o(s,l){if(s.includes("-")){let c=s.split("-"),N=c.length>1;for(let a=0;a<c.length;a++){let F=c[a];if(!N)break;(F.length===0||!qe(F)||!se(F))&&(N=!1)}if(N){let a=0;for(let F=0;F<c.length;F++){let h=c[F],A=F<c.length-1?`${h}-`:h;x.push(A),i.push(!0),r.push("text"),u.push(l+a),a+=A.length}return}}x.push(s),i.push(!0),r.push("text"),u.push(l)}for(let s=0;s<e.len;s++){let l=e.texts[s],c=e.kinds[s];if(c==="text"&&se(l)&&qe(l)){let N=[l],a=s+1;for(;a<e.len&&e.kinds[a]==="text"&&se(e.texts[a])&&U(t,e.starts[a],n)!==!1;)N.push(e.texts[a]),a++;o(Q(N),e.starts[s]),s=a-1;continue}x.push(l),i.push(e.isWordLike[s]),r.push(c),u.push(e.starts[s])}return{len:x.length,texts:x,isWordLike:i,kinds:r,starts:u}}function pt(e,t,n){let x=[],i=[],r=[],u=[],o=0;for(;o<e.len;){let s=e.texts[o],l=e.kinds[o],c=e.isWordLike[o];if(l==="text"){let N=[s],a=o+1,F=c;for(;a<e.len&&e.kinds[a]==="text"&&(U(t,e.starts[a],n)??Ct(e.texts[a-1],e.isWordLike[a-1],e.texts[a],e.isWordLike[a],n));){let h=e.texts[a];N.push(h),F=F||e.isWordLike[a],a++}if(a>o+1){x.push(Q(N)),i.push(F),r.push("text"),u.push(e.starts[o]),o=a;continue}}x.push(s),i.push(c),r.push(l),u.push(e.starts[o]),o++}return{len:x.length,texts:x,isWordLike:i,kinds:r,starts:u}}function Mt(e){let t=[],n=[],x=[],i=[],r=0;for(;r<e.len;){let u=[e.texts[r]],o=e.isWordLike[r],s=e.kinds[r],l=e.starts[r];if(s==="glue"){let c=[u[0]],N=l;for(r++;r<e.len&&e.kinds[r]==="glue";)c.push(e.texts[r]),r++;let a=Q(c);if(r<e.len&&e.kinds[r]==="text")u[0]=a,u.push(e.texts[r]),o=e.isWordLike[r],s="text",l=N,r++;else{t.push(a),n.push(!1),x.push("glue"),i.push(N);continue}}else r++;if(s==="text")for(;r<e.len&&e.kinds[r]==="glue";){let c=[];for(;r<e.len&&e.kinds[r]==="glue";)c.push(e.texts[r]),r++;let N=Q(c);if(r<e.len&&e.kinds[r]==="text"){u.push(N,e.texts[r]),o=o||e.isWordLike[r],r++;continue}u.push(N)}t.push(Q(u)),n.push(o),x.push(s),i.push(l)}return{len:t.length,texts:t,isWordLike:n,kinds:x,starts:i}}function mt(e){let{texts:t,kinds:n,starts:x}=e;for(let i=0;i<t.length-1;i++){if(n[i]!=="text"||n[i+1]!=="text"||!K(t[i])||!K(t[i+1]))continue;let r=st(t[i]);r!==null&&(t[i]=r.head,t[i+1]=r.tail+t[i+1],x[i+1]=x[i]+r.head.length)}}function Dt(e,t,n){let x=j0(),i=0,r=[],u=[],o=[],s=[],l=!1,c=0,N=0,a=!1,F="text",h=null,A=!1,S=!1,M=!1,B=!1,L=!1;for(let f of x.segment(e))for(let d of Ft(f.segment,f.isWordLike??!1,f.index,n)){let g=d.kind==="text",D=ut(d.text,d.isWordLike,d.kind),m=K(d.text),P=Ue(d.text),w=le(d.text),v=pe(d.text),E=lt(d.text),p=d.start+d.text.length,C=U(e,d.start,t)??(A||m?null:ce(e,d.text,t,d.start)),W=!1;if(t.carryCJKAfterClosingQuote&&g&&l&&F==="text"&&m&&A&&M)W=!0;else if(g&&l&&F==="text"&&X0(d.text)&&A)W=!0;else if(g&&l&&F==="text"&&B)W=!0;else if(g&&l&&F==="text"&&d.isWordLike&&P&&L)W=!0;else if(D!==null&&l&&F==="text"&&h===D&&C!==!1){N=p;continue}else g&&!d.isWordLike&&l&&F==="text"&&!A&&(V0(d.text)||d.text==="-"&&a)&&(W=!0);g&&l&&F==="text"&&C!==null&&(W=C),W?(N=p,a=a||d.isWordLike,h=null,A=A||m,S=S||P,M=v,B=E,L=He(S,w)):(l&&(r[i]=e.slice(c,N),u[i]=a,o[i]=F,s[i]=c,i++),l=!0,c=d.start,N=p,a=d.isWordLike,F=d.kind,h=D,A=m,S=P,M=v,B=E,L=He(P,w))}l&&(r[i]=e.slice(c,N),u[i]=a,o[i]=F,s[i]=c,i++);for(let f=1;f<i;f++)o[f]==="text"&&!u[f]&&Le(r[f])&&o[f-1]==="text"&&!K(r[f-1])&&(U(e,s[f],t)??ce(e,r[f],t,s[f]))!==!1&&(r[f-1]+=r[f],u[f-1]=u[f-1]||u[f],r[f]="");let k=-1,b=null;for(let f=i-1;f>=0;f--){let d=r[f];if(d.length===0)continue;let g=b?.at(-1)??(k>=0?r[k]:null);if(o[f]==="text"&&!u[f]&&g!==null&&o[k]==="text"&&((U(e,s[f]+d.length,t)??(et(d)&&ce(d,g,t)!==!1))||d==="-"&&rt(g))){b===null&&(b=[]),b.push(d),s[k]=s[f],r[f]="";continue}b!==null&&(r[k]=Qe(b,r[k]),b=null),k=f}b!==null&&(r[k]=Qe(b,r[k]));let I=0;for(let f=0;f<i;f++){let d=r[f];d.length!==0&&(I!==f&&(r[I]=d,u[I]=u[f],o[I]=o[f],s[I]=s[f]),I++)}r.length=I,u.length=I,o.length=I,s.length=I;let R=Mt({len:I,texts:r,isWordLike:u,kinds:o,starts:s}),O=pt(Bt(dt(R,e,t),e,t),e,t);mt(O);for(let f=0;f<O.len-1;f++){let d=ot(O.texts[f]);d!==null&&(O.kinds[f]!=="space"&&O.kinds[f]!=="preserved-space"||O.kinds[f+1]!=="text"||!Ue(O.texts[f+1])||(O.texts[f]=d.space,O.isWordLike[f]=!1,O.kinds[f]=O.kinds[f]==="preserved-space"?"preserved-space":"space",O.texts[f+1]=d.marks+O.texts[f+1],O.starts[f+1]=O.starts[f]+d.space.length))}return O}function Lt(e,t,n){if(t.len<=1)return t;let x=[],i=[],r=[],u=[],o=-1,s=!1;function l(a){x.push(t.texts[a]),i.push(t.isWordLike[a]),r.push("text"),u.push(t.starts[a])}function c(a,F){let h=!1;for(let M=a;M<F;M++)h=h||t.isWordLike[M];let A=t.starts[a],S=F<t.len?t.starts[F]:e.length;x.push(e.slice(A,S)),i.push(h),r.push("text"),u.push(A)}function N(a){if(!(o<0)){if(s)o+1===a?l(o):c(o,a);else for(let F=o;F<a;F++)l(F);o=-1,s=!1}}for(let a=0;a<t.len;a++){let F=t.texts[a],h=t.kinds[a];if(h==="text"){o>=0&&(!Xe(t.texts[a-1],n.breakKeepAllAfterPunctuation)||U(e,t.starts[a],n)===!1)&&N(a),o<0&&(o=a),s=s||K(F);continue}N(a),x.push(F),i.push(t.isWordLike[a]),r.push(h),u.push(t.starts[a])}return N(t.len),{len:x.length,texts:x,isWordLike:i,kinds:r,starts:u}}function x0(e,t){let n=e.charCodeAt(t+1);if(n<128){if(n<48||n>57)return!1}else{let x=e.codePointAt(t+1);if(x===void 0||!ue.test(String.fromCodePoint(x)))return!1}for(let x=t;x>0;){let i=X(e,x),r=e.slice(i,x);if(!H.test(r))return K(r)||!/[\p{L}\p{N}]/u.test(r);x=i}return!0}function kt(e,t){let n=[],x=0,i=0,r=!1,u=!1,o=!1,s=!1,l=!1;function c(){i!==x&&(n.push({text:e.slice(x,i),start:x,overflow:r?s?"grapheme":"none":"word-like"}),x=i,r=!1,u=!1,o=!1,s=!1,l=!1)}function N(F,h,A){x=h,i=h+F.length,r=A,s=F==="-",u=pe(F),o=Fe.has(F)}function a(F,h){i+=F.length,r=r||h,s=s||F==="-";let A=pe(F);F.length===1&&q.has(F)?u=u||A:u=A,o=!1}for(let F of _().segment(e)){let h=F.segment,A=K(h);if(i===x){N(h,F.index,A);continue}let S=h==="-"&&r;if(S&&x0(e,F.index)&&(l=!0),o||me.has(h)||q.has(h)||S||l&&!A||t.carryCJKAfterClosingQuote&&A&&u){a(h,A);continue}if(!r&&!A){a(h,A);continue}c(),N(h,F.index,A)}return c(),n}function Ot(e,t,n){if(t.length<=1)return t;let x=[],i=-1,r=!1;function u(s,l){let c=t[s].start,N=l<t.length?t[l].start:e.length;x.push({text:e.slice(c,N),start:c,overflow:"word-like"})}function o(s){if(!(i<0)){if(r)i+1===s?x.push(t[i]):u(i,s);else for(let l=i;l<s;l++)x.push(t[l]);i=-1,r=!1}}for(let s=0;s<t.length;s++){let l=t[s];i>=0&&(!Xe(t[s-1].text,n.breakKeepAllAfterPunctuation)||U(e,l.start,n)===!1)&&o(s),i<0&&(i=s),r=r||K(l.text)}return o(t.length),x}function i0(e,t,n){let x=kt(e,t);return n==="keep-all"?Ot(e,x,t):x}function It(e){return e==="-"||e==="\u058A"||e==="\u2010"||e==="\u2012"||e==="\u2013"||e==="\u2014"}function r0(e){if(e.length===0||/\p{Cf}/u.test(e))return!1;for(let{segment:t}of _().segment(e)){let n=String.fromCodePoint(t.codePointAt(0));if(!/[\p{P}\p{S}]/u.test(n)||e0.test(n)||t.includes("\uFE0F")||/\p{Emoji_Modifier}/u.test(n))return!1}return!0}function s0(e){if(!/[-\u058A\u2010\u2012\u2013\u2014]/u.test(e))return null;let t=[],n=0;for(let x of _().segment(e)){n++;let i=x.segment==="-"&&x0(e,x.index);It(x.segment)&&!i&&t.push(n)}return t.length===0?null:t}function u0(e,t,n="normal",x="normal"){let i=n==="pre-wrap"?K0(e):G0(e);if(i.length===0)return{normalized:i,len:0,texts:[],isWordLike:[],kinds:[],starts:[]};let r=Dt(i,t,n),u=x==="keep-all"?Lt(i,r,t):r;return{normalized:i,...u}}var ee=null,Oe=new Map,te=null,bt=96,Wt=/\p{Emoji_Presentation}/u,wt=/[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Regional_Indicator}\uFE0F\u20E3]/u,Ie=new Map;function be(){if(ee!==null)return ee;if(typeof OffscreenCanvas<"u")return ee=new OffscreenCanvas(1,1).getContext("2d"),ee;if(typeof document<"u")return ee=document.createElement("canvas").getContext("2d"),ee;throw new Error("Text measurement requires OffscreenCanvas or a DOM canvas context.")}function Pt(e){let t=Oe.get(e);return t||(t=new Map,Oe.set(e,t)),t}function z(e,t){let n=t.get(e);return n===void 0&&(n={width:be().measureText(e).width},t.set(e,n)),n}function V(){if(te!==null)return te;if(typeof navigator>"u")return te={geckoAsciiLineBreaks:!1,lineFitEpsilon:.005,carryCJKAfterClosingQuote:!1,breakKeepAllAfterPunctuation:!0,preferPrefixWidthsForBreakableRuns:!1},te;let e=navigator.userAgent,n=navigator.vendor==="Apple Computer, Inc."&&e.includes("Safari/")&&!e.includes("Chrome/")&&!e.includes("Chromium/")&&!e.includes("CriOS/")&&!e.includes("FxiOS/")&&!e.includes("EdgiOS/"),x=e.includes("Chrome/")||e.includes("Chromium/")||e.includes("CriOS/")||e.includes("Edg/");return te={geckoAsciiLineBreaks:e.includes("Firefox/")&&!e.includes("FxiOS/"),lineFitEpsilon:n?1/64:.005,carryCJKAfterClosingQuote:x,breakKeepAllAfterPunctuation:!n,preferPrefixWidthsForBreakableRuns:n},te}function Rt(e){let t=e.match(/(?:^|\D)(\d+(?:\.\d+)?)\s*px/);return t?parseFloat(t[1]):16}function vt(e){return Wt.test(e)||e.includes("\uFE0F")}function l0(e){return wt.test(e)}function Tt(e){let t=Ie.get(e);if(t!==void 0)return t;let n=Rt(e),x=be();x.font=e;let i=x.measureText("\u{1F600}").width;if(t=0,i>n+.5&&typeof document<"u"&&document.body!==null){let r=document.createElement("span");r.style.font=e,r.style.display="inline-block",r.style.visibility="hidden",r.style.position="absolute",r.textContent="\u{1F600}",document.body.appendChild(r);let u=r.getBoundingClientRect().width;document.body.removeChild(r),i-u>.5&&(t=i-u)}return Ie.set(e,t),t}function yt(e){let t=0,n=_();for(let x of n.segment(e))vt(x.segment)&&t++;return t}function Gt(e,t){return t.emojiCount===void 0&&(t.emojiCount=yt(e)),t.emojiCount}function Y(e,t,n){return n===0?t.width:t.width-Gt(e,t)*n}function o0(e,t,n,x,i){if(t.breakableFitAdvances!==void 0&&t.breakableFitMode===i)return t.breakableFitAdvances;t.breakableFitMode=i;let r=_(),u=[];for(let c of r.segment(e))u.push(c.segment);if(u.length<=1)return t.breakableFitAdvances=null,t.breakableFitAdvances;if(i==="sum-graphemes"){let c=[];for(let N of u){let a=z(N,n);c.push(Y(N,a,x))}return t.breakableFitAdvances=c,t.breakableFitAdvances}if(i==="pair-context"||u.length>bt){let c=[],N=null,a=0;for(let F of u){let h=z(F,n),A=Y(F,h,x);if(N===null)c.push(A);else{let S=N+F,M=z(S,n);c.push(Y(S,M,x)-a)}N=F,a=A}return t.breakableFitAdvances=c,t.breakableFitAdvances}let o=[],s="",l=0;for(let c of u){s+=c;let N=z(s,n),a=Y(s,N,x);o.push(a-l),l=a}return t.breakableFitAdvances=o,t.breakableFitAdvances}function fe(e,t){let n=be();n.font=e;let x=Pt(e),i=t?Tt(e):0;return{cache:x,emojiCorrection:i}}function a0(){Oe.clear(),Ie.clear()}function We(e,t,n){return n===0&&t>0&&t<e.length&&e[t-1]==="soft-hyphen"}function Kt(e){return e==="space"||e==="zero-width-break"||e==="soft-hyphen"}function we(e){return e==="space"||e==="preserved-space"||e==="tab"||e==="zero-width-break"||e==="soft-hyphen"}function f0(e,t,n=e.widths.length){for(;t<n;){let x=e.kinds[t];if(!Kt(x))break;t++}return t}function jt(e,t){if(t<=0)return 0;let n=e%t;return Math.abs(n)<=1e-6?t:t-n}function zt(e,t,n){return e.letterSpacing!==0&&t&&e.spacingGraphemeCounts[n]>0?e.letterSpacing:0}function Pe(e,t){return t===0?0:e+t}function Jt(e,t){return e.letterSpacing!==0&&e.spacingGraphemeCounts[t]>0?e.letterSpacing:0}function _t(e,t,n,x,i){let r=t==="tab"?i+Jt(e,n):e.lineEndFitAdvances[n];return Pe(x,r)}function c0(e,t,n,x){let i=t==="tab"?0:e.lineEndFitAdvances[n];return Pe(x,i)}function F0(e,t,n,x,i){let r=t==="tab"?i:e.lineEndPaintAdvances[n];return Pe(x,r)}function Ut(e,t,n){return e.letterSpacing!==0&&t?n+e.letterSpacing:n}function Ht(e,t){return e.letterSpacing===0?t:t+e.letterSpacing}function Ne(e,t,n){let x=t;if(x>=e.length||e[x]>=n)return x;let i=e.length;for(x++;x<i;){let r=Math.floor((x+i)/2);e[r]<n?x=r+1:i=r}return x}function Qt(e,t,n,x,i){if(e.letterSpacing===0)return 0;if(i>0)return e.spacingGraphemeCounts[x]>0?e.letterSpacing:0;if(We(e.kinds,x,i))return 0;for(let r=x-1;r>=t;r--){let u=e.kinds[r];if(!(u==="space"||u==="zero-width-break"||u==="hard-break"||u==="soft-hyphen"))return r===t&&n>0||e.spacingGraphemeCounts[r]>0?e.letterSpacing:0}return 0}function Yt(e,t,n,x,i,r){return t+Qt(e,n,x,i,r)}function $t(e,t){let n=0,x=e.chunks.length;for(;n<x;){let i=Math.floor((n+x)/2);t<e.chunks[i].consumedEndSegmentIndex?x=i:n=i+1}return n<e.chunks.length?n:-1}function N0(e,t,n){let x=n.segmentIndex;if(n.graphemeIndex>0)return t;for(let i=t;i<e.chunks.length;i++){let r=e.chunks[i];if(r.startSegmentIndex===r.endSegmentIndex&&x===r.startSegmentIndex||(x<r.startSegmentIndex&&(x=r.startSegmentIndex),x=f0(e,x,r.endSegmentIndex),x<r.endSegmentIndex))return n.segmentIndex=x,n.graphemeIndex=0,i;if(r.consumedEndSegmentIndex>=e.widths.length)return-1;x=r.consumedEndSegmentIndex,n.segmentIndex=x,n.graphemeIndex=0}return-1}function ne(e,t){if(t.segmentIndex>=e.widths.length)return-1;let n=$t(e,t.segmentIndex);return n<0?-1:N0(e,n,t)}function qt(e,t,n){if(n.segmentIndex>=e.widths.length)return-1;let x=t;for(;x<e.chunks.length&&n.segmentIndex>=e.chunks[x].consumedEndSegmentIndex;)x++;return x>=e.chunks.length?-1:N0(e,x,n)}function d0(e,t){return oe(e,t)}function Zt(e,t,n){let{widths:x,kinds:i,breakableFitAdvances:r,breakablePreferredBreaks:u}=e;if(x.length===0)return 0;let s=V().lineFitEpsilon,l=t+s,c=0,N=0,a=!1,F=0,h=0,A=0,S=0,M=-1,B=0;function L(){M=-1,B=0}function k(d=A,g=S,D=N){c++,n?.(D,F,h,d,g),N=0,a=!1,L()}function b(d,g){a=!0,F=d,h=0,A=d+1,S=0,N=g}function I(d,g,D){a=!0,F=d,h=g,A=d,S=g+1,N=D}function R(d,g){if(!a){b(d,g);return}N+=g,A=d+1,S=0}function O(d,g){let D=r[d],m=u[d]??null,P=m===null?-1:Ne(m,0,g+1),w=-1,v=0,E=g;for(;E<D.length;){let p=D[E];if(!a)I(d,E,p);else if(N+p>l){if(m!==null&&w>g){k(d,w,v),E=w,P=Ne(m,P,E+1),w=-1,v=0;continue}k(),I(d,E,p)}else N+=p,A=d,S=E+1;let C=E+1;m!==null&&m[P]===C&&(w=C,v=N,P++),E++}a&&A===d&&S===D.length&&(A=d+1,S=0)}let f=0;for(;f<x.length&&!(!a&&(f=f0(e,f),f>=x.length));){let d=x[f],g=i[f],D=we(g);if(!a){d>l&&r[f]!==null?O(f,0):b(f,d),D&&(M=f+1,B=N-d),f++;continue}if(N+d>l){if(D){R(f,d),k(f+1,0,N-d),f++;continue}if(M>=0){if(A>M||A===M&&S>0){k();continue}k(M,0,B);continue}if(d>l&&r[f]!==null){k(),O(f,0),f++;continue}k();continue}R(f,d),D&&(M=f+1,B=N-d),f++}return a&&k(),c}function oe(e,t,n){if(e.simpleLineWalkFastPath)return Zt(e,t,n);let x={segmentIndex:0,graphemeIndex:0},i=ne(e,x);return Re(e,x,i,t,n).lineCount}function Vt(e,t,n,x){return Re(e,t,n,x,void 0,1).lastLineWidth}function Re(e,t,n,x,i,r=Number.POSITIVE_INFINITY){let{widths:u,kinds:o,breakableFitAdvances:s,breakablePreferredBreaks:l,discretionaryHyphenWidth:c}=e,a=V().lineFitEpsilon,F=x+a,h,A,S,M,B,L,k,b,I,R;function O(){return R==="soft-hyphen"&&k===B&&L===0?I:S}function f(E=B,p=L,C=O()){return M?(t.segmentIndex=E,t.graphemeIndex=p,Yt(e,C,h,A,E,p)):null}function d(E,p){M=!0,B=E+1,L=0,S=p}function g(E,p,C){M=!0,B=E,L=p+1,S=C}function D(E,p){if(!M){d(E,p);return}S+=p,B=E+1,L=0}function m(E,p,C,W,y,j){if(!p)return;let G=c0(e,E,C,y),T=F0(e,E,C,y,W);k=C+1,b=S-j+G,I=S-j+T,R=E}function P(E,p){let C=s[E],W=l[E]??null,y=W===null?-1:Ne(W,0,p+1),j=-1,G=0;for(let T=p;T<C.length;T++){let $=C[T];if(!M)g(E,T,$);else{let je=Ut(e,!0,$),J=S+je;if(Ht(e,J)>F)return W!==null&&j>p?f(E,j,G):f();S=J,B=E,L=T+1}let ie=T+1;W!==null&&W[y]===ie&&(j=ie,G=S,y++)}return M&&B===E&&L===C.length&&(B=E+1,L=0),null}let w=0,v=null;for(;n>=0&&w<r;){h=t.segmentIndex,A=t.graphemeIndex,S=0,M=!1,B=t.segmentIndex,L=t.graphemeIndex,k=-1,b=0,I=0,R=null;let E=e.chunks[n],p=null;if(E.startSegmentIndex===E.endSegmentIndex)t.segmentIndex=E.consumedEndSegmentIndex,t.graphemeIndex=0,p=0;else{e:for(let C=t.segmentIndex;C<E.endSegmentIndex;C++){let W=o[C],y=we(W),j=C===t.segmentIndex?t.graphemeIndex:0,G=zt(e,M,C),T=W==="tab"?jt(S+G,e.tabStopAdvance):u[C],$=G+T,ie=_t(e,W,C,G,T);if(W==="soft-hyphen"&&j===0){M&&(B=C+1,L=0,C+1<E.endSegmentIndex&&(k=C+1,b=S+c,I=S+c,R=W));continue}if(!M){if(j>0){let J=P(C,j);if(J!==null){p=J;break e}}else if(ie>F&&s[C]!==null){let J=P(C,0);if(J!==null){p=J;break e}}else d(C,T);m(W,y,C,T,G,$);continue}if(S+ie>F){let J=S+c0(e,W,C,G),k0=S+F0(e,W,C,G,T);if(y&&J<=F){D(C,$),p=f(C+1,0,k0);break e}if(k>=0&&b<=F){if(B>k||B===k&&L>0){p=f();break e}p=f(k,0,I);break e}p=f();break e}D(C,$),m(W,y,C,T,G,$)}p===null&&(p=k===E.consumedEndSegmentIndex&&L===0?f(E.consumedEndSegmentIndex,0,I):f(E.consumedEndSegmentIndex,0,S))}if(p===null)break;v=p,w++,i?.(p,h,A,t.segmentIndex,t.graphemeIndex),w<r&&(n=qt(e,n,t))}return{lineCount:w,lastLineWidth:v}}function Xt(e,t,n){let{widths:x,kinds:i,breakableFitAdvances:r,breakablePreferredBreaks:u}=e,s=V().lineFitEpsilon,l=n+s,c=0,N=!1,a=t.segmentIndex,F=t.graphemeIndex,h=-1,A=0;for(let S=t.segmentIndex;S<x.length;S++){let M=i[S],B=we(M),L=S===t.segmentIndex?t.graphemeIndex:0,k=r[S],b=x[S];if(!N){if(L>0||b>l&&k!==null){let I=k,R=u[S]??null,O=R===null?-1:Ne(R,0,L+1),f=-1,d=0,g=I[L];N=!0,c=g,a=S,F=L+1,R!==null&&R[O]===F&&(f=F,d=c,O++);for(let D=L+1;D<I.length;D++){let m=I[D];if(c+m>l)return R!==null&&f>L?(t.segmentIndex=S,t.graphemeIndex=f,d):(t.segmentIndex=a,t.graphemeIndex=F,c);c+=m,a=S,F=D+1,R!==null&&R[O]===F&&(f=F,d=c,O++)}a===S&&F===I.length&&(a=S+1,F=0)}else N=!0,c=b,a=S+1,F=0;B&&(h=S+1,A=c-b);continue}if(c+b>l)return B?(t.segmentIndex=S+1,t.graphemeIndex=0,c):h>=0?a>h||a===h&&F>0?(t.segmentIndex=a,t.graphemeIndex=F,c):(t.segmentIndex=h,t.graphemeIndex=0,A):(t.segmentIndex=a,t.graphemeIndex=F,c);c+=b,a=S+1,F=0,B&&(h=S+1,A=c-b)}return N?(t.segmentIndex=a,t.graphemeIndex=F,c):null}function de(e,t,n,x){return e.simpleLineWalkFastPath?Xt(e,t,x):Vt(e,t,n,x)}function he(e,t,n){let x=ne(e,t);return x<0?null:de(e,t,x,n)}function h0(e,t){if(e.widths.length===0)return{lineCount:0,maxLineWidth:0};let n={segmentIndex:0,graphemeIndex:0},x=0,i=0;if(!e.simpleLineWalkFastPath){let r=ne(e,n);return x=Re(e,n,r,t,u=>{u>i&&(i=u)}).lineCount,{lineCount:x,maxLineWidth:i}}for(;;){let r=he(e,n,t);if(r===null)return{lineCount:x,maxLineWidth:i};x++,r>i&&(i=r)}}var ve=new WeakMap;function S0(e,t,n){let x=n.get(e);if(x!==void 0)return x;x=[0];let i=_();for(let r of i.segment(t[e]))x.push(r.index+r.segment.length);return n.set(e,x),x}function xe(e){let t=ve.get(e);return t!==void 0||(t=new Map,ve.set(e,t)),t}function Se(e,t,n,x,i,r){let u="";for(let o=n;o<i;o++)if(!(e.kinds[o]==="soft-hyphen"||e.kinds[o]==="hard-break"))if(o===n&&x>0){let s=S0(o,e.segments,t);u+=e.segments[o].slice(s[x])}else u+=e.segments[o];if(r>0){let o=S0(i,e.segments,t);u+=e.segments[i].slice(o[n===i?x:0],o[r])}return We(e.kinds,i,r)?u+"-":u}function A0(){ve=new WeakMap}function en(e){return e?{widths:[],lineEndFitAdvances:[],lineEndPaintAdvances:[],kinds:[],simpleLineWalkFastPath:!0,segLevels:null,breakableFitAdvances:[],breakablePreferredBreaks:[],letterSpacing:0,spacingGraphemeCounts:[],discretionaryHyphenWidth:0,tabStopAdvance:0,chunks:[],segments:[]}:{widths:[],lineEndFitAdvances:[],lineEndPaintAdvances:[],kinds:[],simpleLineWalkFastPath:!0,segLevels:null,breakableFitAdvances:[],breakablePreferredBreaks:[],letterSpacing:0,spacingGraphemeCounts:[],discretionaryHyphenWidth:0,tabStopAdvance:0,chunks:[]}}function E0(e,t){if(t==="zero-width-break"||t==="soft-hyphen"||t==="hard-break")return 0;if(t==="tab")return 1;let n=0,x=_();for(let i of x.segment(e))n++;return n}function tn(e,t,n){return t>1?e+(t-1)*n:e}function nn(e,t,n,x,i){let r=V(),{cache:u,emojiCorrection:o}=fe(t,l0(e.normalized)),s=Y("-",z("-",u),o)+(i===0?0:i*2),c=Y(" ",z(" ",u),o)*8,N=i!==0;if(e.len===0)return en(n);let a=[],F=[],h=[],A=[],S=!N,M=n?[]:null,B=[],L=[],k=[],b=n?[]:null,I=[],R=0;function O(g,D,m,P,w,v,E,p,C){w!=="text"&&w!=="space"&&w!=="zero-width-break"&&(S=!1),a.push(D),F.push(m),h.push(P),A.push(w),M?.push(v),B.push(E),L.push(p),N&&k.push(C),b!==null&&b.push(g)}function f(g,D,m,P,w){let v=N?E0(g,m):0,E=tn(Y(g,D,o),v,i),p=m==="space"||m==="preserved-space"||m==="zero-width-break"?0:E,C=p===0?0:p+(v>0?i:0),W=m==="space"||m==="zero-width-break"?0:E;if(w&&g.length>1){let y="sum-graphemes";i!==0?y="segment-prefixes":se(g)?y="pair-context":r.preferPrefixWidthsForBreakableRuns&&(y="segment-prefixes");let j=o0(g,D,u,o,y),G=j===null||x==="keep-all"?null:s0(g);O(g,E,C,W,m,P,j,G,v);return}O(g,E,C,W,m,P,null,null,v)}for(let g=0;g<e.len;g++){let D=e.texts[g],m=e.kinds[g],P=e.starts[g];if(m==="soft-hyphen"){O(D,0,s,s,m,P,null,null,0);continue}if(m==="hard-break"){let w=a.length;O(D,0,0,0,m,P,null,null,0),I.push({startSegmentIndex:R,endSegmentIndex:w,consumedEndSegmentIndex:a.length}),R=a.length;continue}if(m==="tab"){O(D,0,0,0,m,P,null,null,N?E0(D,m):0);continue}if(m==="text"&&K(D)){let w=i0(D,r,x);for(let v=0;v<w.length;v++){let E=w[v],p=z(E.text,u);f(E.text,p,"text",P+E.start,E.overflow==="grapheme"||e.isWordLike[g]&&(x==="keep-all"||E.overflow==="word-like"))}continue}f(D,z(D,u),m,P,m==="text"&&(e.isWordLike[g]||r0(D)))}R<a.length&&I.push({startSegmentIndex:R,endSegmentIndex:a.length,consumedEndSegmentIndex:a.length});let d=M===null?null:_e(e.normalized,M);return b!==null?{widths:a,lineEndFitAdvances:F,lineEndPaintAdvances:h,kinds:A,simpleLineWalkFastPath:S,segLevels:d,breakableFitAdvances:B,breakablePreferredBreaks:L,letterSpacing:i,spacingGraphemeCounts:k,discretionaryHyphenWidth:s,tabStopAdvance:c,chunks:I,segments:b}:{widths:a,lineEndFitAdvances:F,lineEndPaintAdvances:h,kinds:A,simpleLineWalkFastPath:S,segLevels:d,breakableFitAdvances:B,breakablePreferredBreaks:L,letterSpacing:i,spacingGraphemeCounts:k,discretionaryHyphenWidth:s,tabStopAdvance:c,chunks:I}}function g0(e,t,n,x){let i=x?.wordBreak??"normal",r=x?.letterSpacing??0,u=u0(e,V(),x?.whiteSpace,i);return nn(u,t,n,i,r)}function xn(e,t,n){return g0(e,t,!1,n)}function Te(e,t,n){return g0(e,t,!0,n)}function rn(e,t,n){let x=d0(e,t);return{lineCount:x,height:x*n}}function ye(e,t,n,x,i,r,u){return{text:Se(e,t,x,i,r,u),width:n,start:{segmentIndex:x,graphemeIndex:i},end:{segmentIndex:r,graphemeIndex:u}}}function C0(e,t,n,x,i){return{width:e,start:{segmentIndex:t,graphemeIndex:n},end:{segmentIndex:x,graphemeIndex:i}}}function sn(e,t){return ye(e,xe(e),t.width,t.start.segmentIndex,t.start.graphemeIndex,t.end.segmentIndex,t.end.graphemeIndex)}function un(e,t,n){return e.widths.length===0?0:oe(e,t,(x,i,r,u,o)=>{n(C0(x,i,r,u,o))})}function ln(e,t){return h0(e,t)}function on(e){let t=0;return oe(e,Number.POSITIVE_INFINITY,n=>{n>t&&(t=n)}),t}function an(e,t,n){let x=e,i={segmentIndex:t.segmentIndex,graphemeIndex:t.graphemeIndex},r=ne(x,i);if(r<0)return null;let u=i.segmentIndex,o=i.graphemeIndex,s=de(x,i,r,n);return s===null?null:ye(e,xe(e),s,u,o,i.segmentIndex,i.graphemeIndex)}function cn(e,t,n){let x=e,i={segmentIndex:t.segmentIndex,graphemeIndex:t.graphemeIndex},r=ne(x,i);if(r<0)return null;let u=i.segmentIndex,o=i.graphemeIndex,s=de(x,i,r,n);return s===null?null:C0(s,u,o,i.segmentIndex,i.graphemeIndex)}function Fn(e,t,n){let x=[];if(e.widths.length===0)return{lineCount:0,height:0,lines:x};let i=xe(e),r=oe(e,t,(u,o,s,l,c)=>{x.push(ye(e,i,u,o,s,l,c))});return{lineCount:r,height:r*n,lines:x}}function B0(){Ze(),A0(),a0()}function fn(e){Ve(e),B0()}var Ge={segmentIndex:0,graphemeIndex:0},m0={itemIndex:0,segmentIndex:0,graphemeIndex:0};function Ae(e){return{segmentIndex:e.segmentIndex,graphemeIndex:e.graphemeIndex}}function p0(e){return e.segmentIndex===0&&e.graphemeIndex===0}function M0(e){return e===32||e===9||e===10||e===12||e===13}function Ke(e,t){let{cache:n}=fe(e,!1);return z(" ",n).width+t}function Nn(e){return he(e,{segmentIndex:0,graphemeIndex:0},Number.POSITIVE_INFINITY)}function dn(e,t){return e===0&&t>0}function hn(e){let t=Array.from({length:e.length}),n=null,x=!1;for(let i=0;i<e.length;i++){let r=e[i],u=r.letterSpacing??0,o=0;for(;o<r.text.length&&M0(r.text.charCodeAt(o));)o++;if(o===r.text.length){o>0&&n===null&&(n=Ke(r.font,u));continue}let s=r.text.length;for(;s>o&&M0(r.text.charCodeAt(s-1));)s--;let l=o>0,c=s<r.text.length,N=r.text.slice(o,s),a=n??(l?Ke(r.font,u):0),F=Te(N,r.font,u===0?void 0:{letterSpacing:u}),h=Nn(F),A=h!==null||F.kinds.includes("zero-width-break"),S={break:r.break??"normal",breakBefore:n!==null||l||x,establishesLine:A,extraWidth:r.extraWidth??0,gapBefore:a,naturalWidth:h??0,prepared:F};t[i]=S,A&&(x=F.kinds.at(-1)==="zero-width-break"),n=c?Ke(r.font,u):null}return{items:t}}function D0(e,t,n,x){if(e.items.length===0||n.itemIndex>=e.items.length)return null;let i=Math.max(1,t),r=!1,u=0,o=i,s=n.itemIndex;e:for(;s<e.items.length;){let l=e.items[s];if(l===void 0){s++,n.segmentIndex=0,n.graphemeIndex=0;continue}if(!p0(n)&&n.segmentIndex===l.prepared.segments.length&&n.graphemeIndex===0){s++,n.segmentIndex=0,n.graphemeIndex=0;continue}if(!l.establishesLine){x?.(s,0,0,Ae(Ge),{segmentIndex:l.prepared.segments.length,graphemeIndex:0}),s++,n.segmentIndex=0,n.graphemeIndex=0;continue}let c=r?l.gapBefore:0,N=p0(n);if(l.break==="never"){if(!N){s++,n.segmentIndex=0,n.graphemeIndex=0;continue}let B=l.naturalWidth+l.extraWidth,L=c+B;if(r&&L>o)break e;x?.(s,c,B,Ae(Ge),{segmentIndex:l.prepared.segments.length,graphemeIndex:0}),r=!0,u+=L,o=i-u,s++,n.segmentIndex=0,n.graphemeIndex=0;continue}let a=c+l.extraWidth;if(r&&a>o)break e;if(N){let B=a+l.naturalWidth;if(B<=o){x?.(s,c,l.naturalWidth+l.extraWidth,Ae(Ge),{segmentIndex:l.prepared.segments.length,graphemeIndex:0}),r=!0,u+=B,o=i-u,s++,n.segmentIndex=0,n.graphemeIndex=0;continue}}let F=Math.max(1,o-a),h={segmentIndex:n.segmentIndex,graphemeIndex:n.graphemeIndex},A=he(l.prepared,h,F);if(A===null){s++,n.segmentIndex=0,n.graphemeIndex=0;continue}if(n.segmentIndex===h.segmentIndex&&n.graphemeIndex===h.graphemeIndex){s++,n.segmentIndex=0,n.graphemeIndex=0;continue}let S=A+l.extraWidth,M=c+S;if(r&&N&&M>o||r&&N&&l.breakBefore&&dn(h.segmentIndex,h.graphemeIndex))break e;if(x?.(s,c,S,Ae(n),{segmentIndex:h.segmentIndex,graphemeIndex:h.graphemeIndex}),r=!0,u+=M,o=i-u,h.segmentIndex===l.prepared.segments.length&&h.graphemeIndex===0){s++,n.segmentIndex=0,n.graphemeIndex=0;continue}n.segmentIndex=h.segmentIndex,n.graphemeIndex=h.graphemeIndex;break}return r?(n.itemIndex=s,u):null}function L0(e,t,n=m0){let x=e,i={itemIndex:n.itemIndex,segmentIndex:n.segmentIndex,graphemeIndex:n.graphemeIndex},r=[],u=D0(x,t,i,(o,s,l,c,N)=>{r.push({itemIndex:o,gapBefore:s,occupiedWidth:l,start:c,end:N})});return u===null?null:{fragments:r,width:u,end:i}}function Sn(e,t){return Se(e.prepared,xe(e.prepared),t.start.segmentIndex,t.start.graphemeIndex,t.end.segmentIndex,t.end.graphemeIndex)}function An(e,t){let n=e,x=[];for(let i=0;i<t.fragments.length;i++){let r=t.fragments[i],u=n.items[r.itemIndex];if(u===void 0)throw new Error("Missing rich-text inline item for fragment");x.push({itemIndex:r.itemIndex,text:Sn(u,r),gapBefore:r.gapBefore,occupiedWidth:r.occupiedWidth,start:r.start,end:r.end})}return{fragments:x,width:t.width,end:t.end}}function En(e,t,n){let x=0,i={...m0};for(;;){let r=L0(e,t,i);if(r===null)return x;i.itemIndex=r.end.itemIndex,i.segmentIndex=r.end.segmentIndex,i.graphemeIndex=r.end.graphemeIndex,n(r),x++}}function gn(e,t){let n=e,x=0,i=0,r={itemIndex:0,segmentIndex:0,graphemeIndex:0};for(;;){let u=D0(n,t,r);if(u===null)return{lineCount:x,maxLineWidth:i};x++,u>i&&(i=u)}}return P0(Cn);})();
+</script>
+
+<!-- ═══════════ 应用脚本 ═══════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ══════════════════════════════════════════════════════════
+     0. 工具
+     ══════════════════════════════════════════════════════════ */
+  var $  = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var html = document.documentElement;
+
+  /* ══════════════════════════════════════════════════════════
+     1. 字体解析
+     Pretext 官方注意事项：system-ui / -apple-system 在 macOS 上
+     测量不准，必须使用「具名字体」；且 canvas font 字符串必须与
+     CSS 完全一致（字号、字重、字族三者一致），否则测量值不可信。
+     所以这里用 canvas 宽度比对法探测实际可用的中文字族，探测结果
+     同时写回 CSS 变量，保证 CSS 渲染与 canvas 测量用的是同一支字体。
+     ══════════════════════════════════════════════════════════ */
+  function fontAvailableOnCanvas(family, probe) {
+    try {
+      var c = document.createElement('canvas');
+      var ctx = c.getContext('2d');
+      if (!ctx) return false;
+      ctx.font = '72px ' + family;
+      var w1 = ctx.measureText(probe).width;
+      ctx.font = '72px monospace';
+      var w2 = ctx.measureText(probe).width;
+      return Math.abs(w1 - w2) > 0.5;
+    } catch (e) { return false; }
+  }
+
+  var SANS_CANDIDATES = ['PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei',
+                         'Source Han Sans SC', 'Noto Sans CJK SC', 'Hiragino Sans GB'];
+  var MONO_CANDIDATES = ['SFMono-Regular', 'Menlo', 'Consolas', 'DejaVu Sans Mono'];
+
+  function resolveFamily(cands, probe, fallback) {
+    for (var i = 0; i < cands.length; i++) {
+      if (fontAvailableOnCanvas('"' + cands[i] + '"', probe)) return cands[i];
+    }
+    return fallback;
+  }
+
+  // 用同时含中文与人名符号的探针，避免只测到拉丁字形而误判
+  var SANS = resolveFamily(SANS_CANDIDATES, '上九蒸馏所AI 1', 'sans-serif');
+  var MONO = resolveFamily(MONO_CANDIDATES, 'MMMiii000', 'monospace');
+
+  var cssFamily = function (name) { return /^[a-zA-Z-]+$/.test(name) ? name : '"' + name + '"'; };
+  html.style.setProperty('--font-sans', cssFamily(SANS) + ',sans-serif');
+  html.style.setProperty('--font-mono', cssFamily(MONO) + ',monospace');
+
+  /* ══════════════════════════════════════════════════════════
+     2. 排版尺度：从 CSS 读取，避免「CSS 改了、JS 没改」的漂移
+     ══════════════════════════════════════════════════════════ */
+  function readTokens() {
+    var cs = getComputedStyle(html);
+    var num = function (n) { return parseFloat(cs.getPropertyValue(n)); };
+    var raw = function (n) { return cs.getPropertyValue(n).trim(); };
+    return {
+      bubblePadX: num('--bubble-pad-x'),
+      bubbleBorderW: num('--bubble-border-w'),
+      body:  { size: num('--t-body-size'),  weight: raw('--t-body-weight'),  lh: num('--t-body-lh') },
+      bodyStrong: { size: num('--t-body-size'), weight: raw('--t-body-strong-weight'), lh: num('--t-body-lh') },
+      bodyBold: { size: num('--t-body-size'), weight: raw('--t-body-bold-weight'), lh: num('--t-body-lh') },
+      lead:  { size: num('--t-lead-size'),  weight: raw('--t-lead-weight'),  lh: num('--t-lead-lh') },
+      small: { size: num('--t-small-size'), weight: raw('--t-small-weight'), lh: num('--t-small-lh') },
+      code:  { size: num('--t-code-size'),  weight: raw('--t-code-weight'),  lh: num('--t-code-lh') },
+      chip:  { size: num('--t-chip-size'),  weight: raw('--t-chip-weight'),  lh: num('--t-chip-lh') }
+    };
+  }
+  var T = readTokens();
+
+  function fontString(tok, family) {
+    return tok.weight + ' ' + tok.size + 'px ' + cssFamily(family || SANS);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     3. 测量层
+     统一接口，两种实现：
+       A. Pretext —— 纯计算，不触发重排（首选）
+       B. DOM 回退 —— 几何测量，会触发重排（降级，功能不变）
+     两者都返回 {height, lineCount, tightWidth}，调用方无需感知差异。
+     ══════════════════════════════════════════════════════════ */
+  var P = (typeof window.Pretext !== 'undefined') ? window.Pretext : null;
+
+  var supportsPretext = !!(P && typeof P.prepare === 'function' &&
+    typeof P.layout === 'function' && typeof Intl !== 'undefined' && Intl.Segmenter &&
+    (function () { try { return !!document.createElement('canvas').getContext('2d'); } catch (e) { return false; } })());
+
+  var stats = { compute: 0, dom: 0, prepared: 0 };
+
+  var Metrics = (function () {
+
+    /* —— 实现 A：Pretext —— */
+    // prepare() 是昂贵的一次性工作，按「文本+字体」缓存；上传流式文本会
+    // 产生大量中间态，故缓存设上限，超过即整体清空（并调用 clearCache 释放上游内部缓存）。
+    var prepCache = new Map();
+    var PREP_CACHE_MAX = 240;
+
+    function pretextMeasure(text, maxWidth, tok, family, key) {
+      if (!text) return { height: tok.lh, lineCount: 1, tightWidth: 0 };
+      var ck = family + '|' + tok.size + '|' + tok.weight + '|' + tok.lh + '|' + key;
+      var prep = prepCache.get(ck);
+      if (!prep) {
+        if (prepCache.size >= PREP_CACHE_MAX) { prepCache.clear(); if (P.clearCache) P.clearCache(); }
+        prep = P.prepareWithSegments(text, fontString(tok, family));
+        prepCache.set(ck, prep);
+        stats.prepared++;
+      }
+      var res = P.layout(prep, Math.max(1, maxWidth), tok.lh);
+      var lineCount = res.lineCount;
+      // 空串时浏览器仍占一行，需按 CSS 行为对齐
+      if (lineCount === 0) lineCount = 1;
+
+      // 紧贴宽度（shrink-wrap）：Pretext 提供的、浏览器缺失的能力
+      var tightWidth = 0;
+      try {
+        var st = P.measureLineStats(prep, Math.max(1, maxWidth));
+        tightWidth = st.maxLineWidth;
+      } catch (e) { tightWidth = 0; }
+
+      return { height: lineCount * tok.lh, lineCount: lineCount, tightWidth: tightWidth };
+    }
+
+    /* —— 富文本（段内混排字重）：rich-inline 逐片段测量 ——
+       把段落拆成「常规片段 / 加粗片段」，每段用各自真实的 canvas 字体串，
+       因此 **加粗** 不再被按常规字重估算 —— 字重会改变字宽，估错就会
+       在换行点附近多出/少掉一行。 */
+    function richItems(text, tok, boldTok, family) {
+      var items = [];
+      var re = /\*\*(.+?)\*\*/g;
+      var last = 0, m;
+      while ((m = re.exec(text)) !== null) {
+        if (m.index > last) items.push({ text: text.slice(last, m.index), font: fontString(tok, family) });
+        items.push({ text: m[1], font: fontString(boldTok, family) });
+        last = m.index + m[0].length;
+      }
+      if (last < text.length) items.push({ text: text.slice(last), font: fontString(tok, family) });
+      return items.filter(function (it) { return it.text.length > 0; });
+    }
+
+    /* —— 实现 B：DOM 回退 —— */
+    var probeEl = null;
+    function domMeasure(text, maxWidth, tok, family) {
+      if (!probeEl) {
+        probeEl = document.createElement('div');
+        probeEl.setAttribute('aria-hidden', 'true');
+        probeEl.style.cssText = 'position:absolute;top:-99999px;left:-99999px;visibility:hidden;' +
+          'pointer-events:none;white-space:normal;overflow-wrap:break-word;';
+        document.body.appendChild(probeEl);
+      }
+      probeEl.style.width = maxWidth + 'px';
+      probeEl.style.fontFamily = cssFamily(family);
+      probeEl.style.fontSize = tok.size + 'px';
+      probeEl.style.fontWeight = tok.weight;
+      probeEl.style.lineHeight = tok.lh + 'px';
+      probeEl.textContent = text || ' ';
+      var w = probeEl.getBoundingClientRect().width;
+      var h = probeEl.getBoundingClientRect().height;
+      stats.dom++;
+      return { height: Math.max(tok.lh, Math.round(h)), lineCount: Math.max(1, Math.round(h / tok.lh)), tightWidth: w };
+    }
+
+    return {
+      /** 段落高度（用于预留空间、判断行数变化） */
+      measure: function (text, maxWidth, tok, family, key) {
+        tok = tok || T.body; family = family || SANS; key = key || 'n';
+        if (supportsPretext) { stats.compute++; return pretextMeasure(text, maxWidth, tok, family, key); }
+        return domMeasure(text, maxWidth, tok, family);
+      },
+      /** 输入框自适应高度：white-space:pre-wrap，与 textarea 行为一致 */
+      measureTextarea: function (text, maxWidth, tok) {
+        if (!supportsPretext) return domMeasure(text, maxWidth, tok, SANS);
+        stats.compute++;
+        var prep = P.prepare(text || ' ', fontString(tok, SANS), { whiteSpace: 'pre-wrap' });
+        var res = P.layout(prep, Math.max(1, maxWidth), tok.lh);
+        return { height: Math.max(tok.lh, res.lineCount * tok.lh), lineCount: res.lineCount || 1, tightWidth: 0 };
+      },
+      /** 夹带 **加粗** 的段落：逐片段（rich-inline）测量，字重各按其真 */
+      measureRich: function (text, maxWidth, tok, boldTok, family) {
+        tok = tok || T.body;
+        boldTok = boldTok || T.bodyBold;
+        family = family || SANS;
+        // 无加粗 → 走更快、零分配的纯文本路径
+        if (!supportsPretext || !P.prepareRichInline || String(text).indexOf('**') === -1) {
+          return this.measure(text, maxWidth, tok, family, 'rich-plain:' + String(text).length);
+        }
+        try {
+          stats.compute++;
+          var items = richItems(text, tok, boldTok, family);
+          if (!items.length) return this.measure(text, maxWidth, tok, family, 'rich-empty');
+          var prep = P.prepareRichInline(items);
+          var st = P.measureRichInlineStats(prep, Math.max(1, maxWidth));
+          var lines = st.lineCount || 1;
+          return { height: lines * tok.lh, lineCount: lines, tightWidth: st.maxLineWidth };
+        } catch (e) {
+          // rich-inline 有意保持窄接口；遇到它不支持的输入就退回纯文本测量
+          stats.richFallback = (stats.richFallback || 0) + 1;
+          return this.measure(String(text).replace(/\*\*/g, ''), maxWidth, tok, family, 'rich-fb');
+        }
+      },
+      /** 引用胶囊行：用 rich-inline 预估需要几行，从而预留高度 */
+      measureChips: function (items, maxWidth) {
+        if (!supportsPretext || !P.prepareRichInline || !items.length) return 0;
+        try {
+          stats.compute++;
+          var prep = P.prepareRichInline(items.map(function (it) {
+            return {
+              text: it.text,
+              font: fontString(T.chip, SANS),
+              break: 'never',
+              extraWidth: it.extraWidth || 0
+            };
+          }));
+          var st = P.measureRichInlineStats(prep, Math.max(1, maxWidth));
+          return st.lineCount * T.chip.lh + (st.lineCount - 1) * 8; // 8px = gap
+        } catch (e) { return 0; }
+      },
+      engine: supportsPretext ? 'pretext' : 'dom',
+      stats: stats
+    };
+  })();
+
+  html.setAttribute('data-metrics', Metrics.engine);
+
+  /* ══════════════════════════════════════════════════════════
+     4. 状态
+     ══════════════════════════════════════════════════════════ */
+  var chatLog   = $('#chat-log');
+  var chatInner = $('#chatInner');
+  var input     = $('#composerInput');
+  var sendBtn   = $('#sendBtn');
+  var status    = $('#srStatus');
+  var toBottom  = $('#toBottom');
+  var badgeDot  = $('#metricsBadge .dot');
+  var badgeTxt  = $('#metricsText');
+  var streaming = false;
+  var stopCurrentStream = null;   // 由正在进行的流式赋值；Esc / 停止按钮调用它中断
+
+  /* ══════════════════════════════════════════════════════════
+     5. 滚动策略
+     只有「行数真的变了」才动滚动位置 —— 这是 Pretext 用在流式输出上的
+     核心价值：绝大多数 token 不产生新行，因此绝大多数时候无需碰滚动。
+     ══════════════════════════════════════════════════════════ */
+  function isNearBottom(slack) {
+    slack = slack == null ? 72 : slack;
+    return chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight <= slack;
+  }
+  function scrollToBottom(smooth) {
+    chatLog.scrollTo({ top: chatLog.scrollHeight, behavior: (smooth && !reduceMotion) ? 'smooth' : 'auto' });
+  }
+  chatLog.addEventListener('scroll', function () {
+    toBottom.setAttribute('data-show', String(!isNearBottom(140)));
+  }, { passive: true });
+  toBottom.addEventListener('click', function () {
+    scrollToBottom(true);
+    input.focus();
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     6. 气泡紧贴宽度（Pretext 的 shrink-wrap）
+     普通做法是 max-width:70%，短句也占满 70%，浪费横向空间；
+     Pretext 能直接给出「最宽那一行」的宽度，于是气泡可以贴合内容。
+     ══════════════════════════════════════════════════════════ */
+  /* ── 布局几何：一次读、整批用 ────────────────────────────────
+     ⚠ 这是全文件性能上最要命的一处。若按「读几何 → 写 style → 再读几何」
+     逐条处理，浏览器每写一次就会把布局标记为脏，下一次读又必须重新布局
+     整棵文档 —— 于是 2000 条消息的测量从毫秒级退化到 30 秒级
+     （实测：31.2 秒，见 preview/bench-long-chat.json）。
+     正确做法：把这一批需要的几何**先一次读完**，之后只做纯计算与写入。
+     行宽/头像宽/间距对所有消息都是同一个值，本来也不需要逐条读。 */
+  var geoCache = null;
+
+  function readGeometry() {
+    if (geoCache) return geoCache;
+    var row = document.querySelector('.msg');
+    var avatar = document.querySelector('.msg__avatar');
+    var gap = row ? (parseFloat(getComputedStyle(row).columnGap) || 0) : 0;
+    var avW = avatar ? avatar.offsetWidth : 0;
+    // .msg 是撑满内容宽的 flex 行；头像与间距从同行扣掉
+    var rowW = chatInner.clientWidth;
+    geoCache = { available: Math.max(120, rowW - avW - gap) };
+    return geoCache;
+  }
+
+  function invalidateGeometry() { geoCache = null; }
+
+  /* 气泡可用的最大外框宽度。
+     ⚠ 也不能用 bubble.parentElement.clientWidth：.msg__col 是 flex 项，
+     用户消息行（row-reverse + align-items:flex-end）里它会「收缩到内容宽度」，
+     于是「可用宽度」被气泡自身宽度决定 —— 循环依赖，会把气泡越算越窄、
+     逼出多余换行。必须取整行的宽度，再减掉头像与间距。 */
+  function availableBubbleWidth() {
+    return readGeometry().available;
+  }
+
+  /* 内容盒可用宽度 = 可用外框宽 - 左右内边距 - 左右边框 */
+  function bubbleMaxContentWidth() {
+    return Math.max(80, availableBubbleWidth() -
+      T.bubblePadX * 2 - T.bubbleBorderW * 2);
+  }
+
+  /* 只对「纯文本气泡」做紧贴。
+     含列表 / 指标 / 快照 / 引用胶囊的气泡不紧贴 —— 那些子块各有自己的最小宽度，
+     强行收窄只会让内部换行变难看；而这类消息本来就会铺满宽度，紧贴并无收益。 */
+  function isSimpleBubble(bubble) {
+    return !bubble.querySelector('.bullets, .kv, .snapshot, .cites, ul, ol, figure');
+  }
+
+  /* 把段落「还原」成 markdown 形式（**加粗**）。
+     这样静态种子内容与 JS 生成内容走同一条测量路径 ——
+     不必额外维护 data-md 属性，DOM 本身就是唯一事实来源。 */
+  function mdFromNode(el) {
+    var out = '';
+    Array.prototype.forEach.call(el.childNodes, function (n) {
+      if (n.nodeType === 3) { out += n.nodeValue; return; }
+      var name = n.nodeName;
+      if (name === 'STRONG' || name === 'B') out += '**' + n.textContent + '**';
+      else out += n.textContent;
+    });
+    return out.replace(/\s+/g, ' ').trim();
+  }
+
+  function applyTightWrap(bubble) {
+    if (!isSimpleBubble(bubble)) { bubble.style.removeProperty('--bubble-w'); return; }
+
+    var maxW = bubbleMaxContentWidth();
+
+    /* 逐块测量再取最大值：lead 是 17px/600，正文是 15px/400，
+       用户气泡正文是 15px/500 —— 用错字重会少算宽度，
+       导致气泡刚好卡在换行点、实际多出一行。 */
+    var isUser = !!bubble.closest('.msg--user');
+    var pieces = [];
+    var lead = bubble.querySelector('.bubble__lead');
+    if (lead && lead.textContent.trim()) pieces.push({ text: lead.textContent.trim(), tok: T.lead });
+    $$('.bubble__body p', bubble).forEach(function (p) {
+      var md = mdFromNode(p);
+      if (md) {
+        pieces.push({ text: md, tok: isUser ? T.bodyStrong : T.body, bold: isUser ? T.bodyStrong : T.bodyBold });
+      }
+    });
+    if (!pieces.length) { bubble.style.removeProperty('--bubble-w'); return; }
+
+    var widest = 0, lines = 1;
+    pieces.forEach(function (pc) {
+      // 用 measureRich：段内加粗按 700 测量，而不是按正文的 400 估算
+      var m = Metrics.measureRich(pc.text, maxW, pc.tok, pc.bold);
+      if (m.tightWidth > widest) { widest = m.tightWidth; lines = m.lineCount; }
+    });
+    if (!widest) { bubble.style.removeProperty('--bubble-w'); return; }
+
+    // +1px 吸收亚像素舍入，避免「刚好卡在换行点」导致多出一行
+    var chrome = T.bubblePadX * 2 + T.bubbleBorderW * 2;
+    var target = Math.min(maxW, Math.ceil(widest) + 1) + chrome;
+    bubble.style.setProperty('--bubble-w', target + 'px');
+    bubble.setAttribute('data-measured-lines', String(lines));
+  }
+
+  /* 整批测量：先把几何读完（readGeometry），再进入「纯计算 + 写入」的循环。
+     两个阶段分开，才不会每写一次就逼出一次全文档重排。 */
+  function measureAllBubbles() {
+    invalidateGeometry();
+    readGeometry();                    // ← 唯一的批量读取点
+    var bubbles = $$('.bubble[data-text]');
+    var cites = $$('[data-cites]');
+    for (var i = 0; i < bubbles.length; i++) applyTightWrap(bubbles[i]);
+    for (var j = 0; j < cites.length; j++) applyCitesReserve(cites[j]);
+  }
+
+  /* 引用胶囊：渲染前先预估需要几行，预留高度 —— 胶囊在流式结束后才出现，
+     不预留的话卡片会突然长高、把滚动位置顶走。
+     胶囊的 chrome（padding/border/gap）在同一套 CSS 下是同一个值，
+     读一次即可，不必逐个 getComputedStyle（那同样是布局抖动源）。 */
+  var chipChrome = null;
+  function chipExtraWidth(el) {
+    if (chipChrome === null) {
+      var cs = getComputedStyle(el);
+      chipChrome = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) +
+        parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth) +
+        (parseFloat(cs.columnGap) || 0);
+    }
+    return chipChrome;
+  }
+
+  function applyCitesReserve(container) {
+    var items = $$('[data-cite]', container);
+    if (!items.length) return;
+    // 引用胶囊出现在结构化气泡里，这类气泡不做紧贴、恒为满宽
+    var available = bubbleMaxContentWidth();
+    var h = Metrics.measureChips(items.map(function (el) {
+      return { text: el.textContent.trim(), extraWidth: chipExtraWidth(el) };
+    }), available);
+    if (h) container.style.setProperty('--cites-h', Math.round(h) + 'px');
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     7. 输入框自适应高度
+     用 Pretext 的 pre-wrap 模式算高度，取代读取 scrollHeight
+     （后者每次都强制重排 —— 打字时每秒数十次）。
+     ══════════════════════════════════════════════════════════ */
+  var inputPadY = 8; // .field textarea 的 padding-block
+  /* 输入框内容宽度。每次按键都调 getComputedStyle 会白白触发样式重算，
+     而宽度只在容器尺寸变化时才会变 —— 因此缓存，由 ResizeObserver 失效。 */
+  var cachedInputW = 0;
+  function inputContentWidth() {
+    if (!cachedInputW) {
+      var cs = getComputedStyle(input);
+      cachedInputW = Math.max(40, input.clientWidth -
+        parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+    }
+    return cachedInputW;
+  }
+  function autoGrow() {
+    // 每次按键只做纯算术；不读 scrollHeight、不查计算样式
+    var m = Metrics.measureTextarea(input.value, inputContentWidth(), T.body);
+    input.style.height = Math.min(180, Math.max(T.body.lh, m.height) + inputPadY * 2) + 'px';
+    sendBtn.disabled = composerMode === 'stop' ? false : input.value.trim().length === 0;
+  }
+  input.addEventListener('input', autoGrow);
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      submit();
+    }
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     8. 消息构造
+     ══════════════════════════════════════════════════════════ */
+  var AVATAR_ASSISTANT =
+    '<svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">' +
+    '<rect x="1" y="1" width="30" height="30" rx="9" fill="#2559E0"/>' +
+    '<path d="M16 8.5a7.5 7.5 0 1 0 7.5 7.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="23.5" cy="16" r="2.7" fill="#F76B0C"/></svg>';
+
+  function nowHM() {
+    var d = new Date();
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  // 极简内联标记：**粗体** → <strong>
+  function inline(s) {
+    return escapeHtml(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+
+  /* 操作条图标集中定义，避免同一个图标在多处重复内联、改一处漏一处 */
+  var ICON_COPY =
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/>' +
+    '<path d="M6 15V6a2 2 0 0 1 2-2h9"/></svg>';
+  var ICON_REGEN =
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+    '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v4h-4"/></svg>';
+  var ICON_PLAY =
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    '<path d="M8 5.5v13l11-6.5z"/></svg>';
+
+  function articleFor(role) {
+    var art = document.createElement('article');
+    art.className = 'msg msg--' + (role === 'user' ? 'user' : 'assistant');
+    var av = document.createElement('span');
+    av.className = 'msg__avatar';
+    av.setAttribute('aria-hidden', 'true');
+    av.innerHTML = role === 'user' ? '我' : AVATAR_ASSISTANT;
+    var col = document.createElement('div');
+    col.className = 'msg__col';
+    art.append(av, col);
+    return { art: art, col: col };
+  }
+
+  function whoLine(role) {
+    var p = document.createElement('p');
+    p.className = 'msg__who';
+    p.innerHTML = role === 'user'
+      ? '<strong>我</strong><time>' + nowHM() + '</time>'
+      : '<strong>知荐助手</strong><time>' + nowHM() + '</time>';
+    return p;
+  }
+
+  function actionsFor() {
+    var wrap = document.createElement('div');
+    wrap.className = 'msg__actions';
+    wrap.innerHTML = '<button class="act" type="button" data-act="copy">' + ICON_COPY + '复制</button>';
+    return wrap;
+  }
+
+  function addUserMessage(text) {
+    var a = articleFor('user');
+    a.col.appendChild(whoLine('user'));
+    var b = document.createElement('div');
+    b.className = 'bubble';
+    b.setAttribute('data-text', text);
+    var body = document.createElement('div');
+    body.className = 'bubble__body';
+    body.setAttribute('data-measure-text', '');
+    var p = document.createElement('p');
+    p.textContent = text;
+    body.appendChild(p);
+    b.appendChild(body);
+    a.col.appendChild(b);
+    chatInner.appendChild(a.art);
+    applyTightWrap(b);
+    return a.art;
+  }
+
+  /* 流式输出：只有在行数变化时才调整滚动位置 */
+  var REPLIES = {
+    'default': {
+      lead: '我按「先取证、再定位、后覆盖」的顺序整理了一版可执行方案。',
+      paras: [
+        '结论先行：千问的缺口不是内容量不足，而是**缺少可被抓取的结构化实体页**。补齐企业官网的结构化数据，是当前投入产出比最高的一步。'
+      ],
+      bullets: [
+        '第一步取证：用 8 条推荐类问句复测 4 个引擎，固定当前基线',
+        '第二步定位：千问的回答里引用了 2 个第三方页面，均无你的官网链接',
+        '第三步覆盖：在官网补齐 Organization + Product 结构化数据，并发布 llms.txt'
+      ],
+      kv: ['预计复测周期 7 天', '涉及 3 个引擎', '需 1 份结构化数据']
+    },
+    'source': {
+      lead: '信源缺口已定位到企业官网的结构化数据层。',
+      paras: ['你目前被引用的页面以第三方问答为主。AI 更信任「品牌自有的、带结构化标注的实体页」，这类信源权重最高，也正是千问没有采用你的原因。'],
+      bullets: [
+        'Organization：品牌名、成立时间、产区、官网地址 —— 与知识库事实严格一致',
+        'Product：单一麦芽威士忌的产品线、年份、容量与工艺描述',
+        'llms.txt：给抓取方一份明确的内容索引与授权说明'
+      ],
+      kv: ['影响引擎 3 个', '优先级 高', '预计生效 2–4 周']
+    },
+    'correction': {
+      lead: '共发现 2 条需要纠偏的断言，其中 1 条来自不可信来源。',
+      paras: ['纠偏的正确做法不是「让 AI 改口」，而是用更高权重的信源覆盖错误信息，然后复测验证。我按这个原则给出步骤。'],
+      bullets: [
+        '取证：保留 3 条错误回答的原文快照与引用来源域名',
+        '定位：错误描述集中引用了同一个第三方转载页面（无署名）',
+        '覆盖：用官网 + 国家标准信源重新发布产区说明，并在知识库登记事实基线',
+        '复测：7 天后用同批问句复核，比对断言是否已纠正'
+      ],
+      kv: ['待纠偏 2 条', '需覆盖 1 个污染源', '复测 7 天后']
+    }
+  };
+
+  function pickReply(prompt) {
+    var t = prompt || '';
+    if (/纠偏|说错|错误|产区/.test(t)) return REPLIES.correction;
+    if (/信源|结构化|官网|llms/.test(t)) return REPLIES.source;
+    return REPLIES['default'];
+  }
+
+  /* ── 输入区两态：发送 ↔ 停止生成 ─────────────────────────────
+     流式期间把发送键变成停止键，是对话类产品的既有习惯；
+     形状从箭头变为方块，因此也不依赖颜色单一传达。 */
+  var composerMode = 'send';
+  var sendIcon = $('#sendIcon');
+  var stopIcon = $('#stopIcon');
+
+  function setComposerMode(mode) {
+    composerMode = mode;
+    var isStop = mode === 'stop';
+    sendBtn.classList.toggle('send--stop', isStop);
+    sendIcon.hidden = isStop;
+    stopIcon.hidden = !isStop;
+    sendBtn.setAttribute('aria-label', isStop ? '停止生成' : '发送');
+    // 停止态下按钮必须可用，否则用户就找不到中断入口了
+    sendBtn.disabled = isStop ? false : input.value.trim().length === 0;
+  }
+
+  function beginStreaming() {
+    streaming = true;
+    setComposerMode('stop');
+    status.textContent = '知荐助手正在生成回答…';
+    scrollToBottom(true);
+  }
+
+  function endStreaming() {
+    streaming = false;
+    stopCurrentStream = null;
+    setComposerMode('send');
+    updateBadge();
+  }
+
+  /* ── 失败态 ────────────────────────────────────────────────
+     判定依据是真实的 navigator.onLine，而不是伪造的开关：
+     把浏览器切到离线再发消息就会走到这里，因此它可被自动化测试覆盖，
+     也能在客户现场「拔网线」复现。 */
+  function addErrorMessage(reason) {
+    var a = articleFor('assistant');
+    a.col.appendChild(whoLine('assistant'));
+
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble bubble--error';
+
+    var lead = document.createElement('div');
+    lead.className = 'bubble__lead bubble__lead--error';
+    lead.innerHTML =
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2.2" stroke-linecap="round" aria-hidden="true">' +
+      '<circle cx="12" cy="12" r="9"/><path d="M12 7.6v5.4"/>' +
+      '<circle cx="12" cy="16.6" r=".95" fill="currentColor" stroke="none"/></svg>' +
+      '<span>回答未能生成</span>';
+
+    var body = document.createElement('div');
+    body.className = 'bubble__body';
+    var p = document.createElement('p');
+    p.textContent = reason;
+    body.appendChild(p);
+
+    bubble.append(lead, body);
+    a.col.appendChild(bubble);
+
+    var actions = actionsFor();
+    var retry = document.createElement('button');
+    retry.className = 'act';
+    retry.type = 'button';
+    retry.setAttribute('data-act', 'retry');
+    retry.innerHTML = ICON_REGEN + '重试';
+    actions.insertBefore(retry, actions.firstChild);
+    a.col.appendChild(actions);
+
+    chatInner.appendChild(a.art);
+    if (isNearBottom(160)) scrollToBottom(true);
+    status.textContent = '回答未能生成，可点击重试';
+    return a.art;
+  }
+
+  /* 流式：逐字揭示，并用 Pretext 复查行数 —— 只在行数变化时动滚动。
+     时间驱动而非帧驱动：帧驱动会跑到 ~120 字/秒，长回答一闪而过，
+     反而看不出「流式」这件事；55 字/秒更接近真实观感。 */
+  function streamAssistant(prompt) {
+    var reply = pickReply(prompt);
+    var a = articleFor('assistant');
+    a.col.appendChild(whoLine('assistant'));
+
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    a.col.appendChild(bubble);
+
+    // 流式期间对屏幕阅读器隐藏，避免逐字播报噪音；完成后整体播报一次
+    var live = document.createElement('div');
+    live.className = 'bubble__lead';
+    live.setAttribute('aria-hidden', 'true');
+    var liveBody = document.createElement('div');
+    liveBody.className = 'bubble__body';
+    liveBody.setAttribute('aria-hidden', 'true');
+    bubble.append(live, liveBody);
+
+    chatInner.appendChild(a.art);
+
+    var plain = [reply.lead].concat(reply.paras.map(function (t) {
+      return t.replace(/\*\*/g, '');
+    })).join('\n');
+    var maxW = bubbleMaxContentWidth(bubble);
+
+    // 预留高度按「最终内容」逐块精确测量（段内加粗按 700），
+    // 而不是拿纯文本按 400 估算 —— 后者会低估高度、流式结束时仍会跳一下。
+    var reserve = 0;
+    reply.paras.forEach(function (t, k) {
+      reserve += Metrics.measureRich(t, maxW, T.body, T.bodyBold).height + (k ? 12 : 0);
+    });
+    if (!reduceMotion) liveBody.style.minHeight = Math.round(reserve * 0.6) + 'px';
+
+    var shownChars = 0;
+    var lastLines = 0;
+    var finished = false;
+    var stopped = false;
+    var CPS = 55;                                  // 每秒揭示字数
+    var startedAt = performance.now();
+
+    function renderChunk(shown) {
+      var nl = shown.indexOf('\n');
+      live.textContent = nl === -1 ? shown : shown.slice(0, nl);
+      liveBody.textContent = nl === -1 ? '' : shown.slice(nl + 1);
+      // 关键：只在行数变化时才调整滚动，避免每帧抖动
+      var m = Metrics.measure(shown, maxW, T.body, SANS, 'stream:' + shown.length);
+      if (m.lineCount !== lastLines) {
+        lastLines = m.lineCount;
+        if (isNearBottom(120)) scrollToBottom(false);
+      }
+    }
+
+    function loop(now) {
+      if (finished || stopped) return;
+      var target = reduceMotion ? plain.length : Math.floor((now - startedAt) / 1000 * CPS);
+      shownChars = Math.min(plain.length, Math.max(shownChars + 1, target));
+      renderChunk(plain.slice(0, shownChars));
+      if (shownChars >= plain.length) finalize(false);
+      else requestAnimationFrame(loop);
+    }
+
+    function finalize(wasStopped) {
+      if (finished) return;
+      finished = true;
+      live.removeAttribute('aria-hidden');
+      liveBody.removeAttribute('aria-hidden');
+      liveBody.style.minHeight = '';
+
+      // 用户实际看到的部分（停止时以它为准）
+      var shownPlain = plain.slice(0, shownChars);
+      var fullPlain = [reply.lead].concat(reply.paras, reply.bullets || [])
+        .join('\n').replace(/\*\*/g, '');
+
+      if (wasStopped) {
+        /* 中断时只保留已经生成出来的文字。
+           不能把 lead + 全部段落一次性补上 —— 那等于「停止」之后
+           用户反而看到了他没等到、也没要求的内容，复制出来的也对不上。 */
+        var nl = shownPlain.indexOf('\n');
+        live.textContent = nl === -1 ? shownPlain : shownPlain.slice(0, nl);
+        liveBody.textContent = nl === -1 ? '' : shownPlain.slice(nl + 1);
+      } else {
+        // 终稿：还原为带结构的富文本（列表 / 指标）
+        live.textContent = reply.lead;
+        liveBody.textContent = '';
+        reply.paras.forEach(function (t) {
+          var p = document.createElement('p');
+          p.innerHTML = inline(t);
+          liveBody.appendChild(p);
+        });
+
+        if (reply.bullets) {
+          var ul = document.createElement('ul');
+          ul.className = 'bullets';
+          reply.bullets.forEach(function (t) {
+            var li = document.createElement('li');
+            li.innerHTML = inline(t);
+            ul.appendChild(li);
+          });
+          bubble.appendChild(ul);
+        }
+        if (reply.kv) {
+          var kv = document.createElement('div');
+          kv.className = 'kv';
+          reply.kv.forEach(function (t) {
+            var sp = document.createElement('span');
+            sp.className = 'kv__item';
+            kv.appendChild(sp);
+            sp.innerHTML = /[0-9]/.test(t) ? t.replace(/^(.*?)(\d.*)$/, '$1<b>$2</b>') : t;
+          });
+          bubble.appendChild(kv);
+        }
+      }
+
+      var actions = actionsFor();
+      var focusTarget = null;
+
+      if (wasStopped) {
+        bubble.classList.add('bubble--stopped');
+        var hint = document.createElement('p');
+        hint.className = 'bubble__hint';
+        hint.textContent = '已停止生成';
+        bubble.appendChild(hint);
+
+        var cont = document.createElement('button');
+        cont.className = 'act';
+        cont.type = 'button';
+        cont.setAttribute('data-act', 'continue');
+        cont.innerHTML = ICON_PLAY + '继续生成';
+        cont.addEventListener('click', resume);
+        actions.insertBefore(cont, actions.firstChild);
+        focusTarget = cont;                        // 键盘用户下一步就落在「继续生成」上
+      }
+      a.col.appendChild(actions);
+
+      // data-text 用于复制与紧贴宽度 —— 必须与屏幕上实际显示的内容一致
+      bubble.setAttribute('data-text', wasStopped ? shownPlain : fullPlain);
+      applyTightWrap(bubble);
+
+      endStreaming();
+      status.textContent = wasStopped ? '已停止生成，可继续生成' : '';
+      if (isNearBottom(160)) scrollToBottom(true);
+      if (focusTarget) focusTarget.focus();
+      else input.focus();
+    }
+
+    /* 从「已停止」的位置接着生成，而不是从头重来 */
+    function resume() {
+      if (streaming) return;
+      var acts = a.art.querySelector('.msg__actions');
+      if (acts) acts.remove();
+      var hint = bubble.querySelector('.bubble__hint');
+      if (hint) hint.remove();
+      bubble.classList.remove('bubble--stopped');
+      bubble.setAttribute('data-text', '');
+      live.setAttribute('aria-hidden', 'true');
+      liveBody.setAttribute('aria-hidden', 'true');
+      finished = false;
+      stopped = false;
+      // 让时间轴接着原来的进度走，避免续写后突然按初始速率爆发
+      startedAt = performance.now() - (shownChars / CPS) * 1000;
+      beginStreaming();
+      // endStreaming() 把 stopCurrentStream 置空了，续写必须重新装上，
+      // 否则第二次「停止生成」会失效（按钮变为停止态却停不下来）。
+      stopCurrentStream = requestStop;
+      requestAnimationFrame(loop);
+    }
+
+    function requestStop() {
+      if (finished) return;
+      stopped = true;
+      finalize(true);
+    }
+
+    stopCurrentStream = requestStop;
+
+    beginStreaming();
+    requestAnimationFrame(loop);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     9. 提交
+     ══════════════════════════════════════════════════════════ */
+  function submit() {
+    var text = input.value.trim();
+    if (!text || streaming) return;
+    addUserMessage(text);
+    input.value = '';
+    autoGrow();
+    scrollToBottom(true);
+
+    // 离线：直接给出失败态与「重试」，而不是假装在生成再无声失败
+    if (!navigator.onLine) {
+      addErrorMessage('当前处于离线状态，无法连接诊断服务。请检查网络后重试。');
+      return;
+    }
+    streamAssistant(text);
+  }
+  $('#composerForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    // 流式期间按钮已变为「停止生成」，提交动作即中断
+    if (streaming) { if (stopCurrentStream) stopCurrentStream(); return; }
+    submit();
+  });
+
+  /* 断网提示：用真实网络状态驱动，可在客户现场直接拔网线复现 */
+  function applyOnline() {
+    document.body.setAttribute('data-online', navigator.onLine ? 'true' : 'false');
+  }
+  window.addEventListener('online', applyOnline);
+  window.addEventListener('offline', applyOnline);
+  applyOnline();
+
+  /* 推荐问句：填入并聚焦，不直接发送，把控制权留给用户 */
+  $$('[data-suggest]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      input.value = chip.getAttribute('data-suggest');
+      autoGrow();
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     10. 消息操作（复制 / 重新生成）
+     ══════════════════════════════════════════════════════════ */
+  function copyText(text, btn) {
+    var done = function () {
+      var old = btn.textContent;
+      btn.textContent = '已复制';
+      status.textContent = '回答已复制到剪贴板';
+      setTimeout(function () { btn.textContent = old; status.textContent = ''; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:absolute;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { status.textContent = '复制失败，请手动选择文本'; }
+      document.body.removeChild(ta);
+    }
+  }
+
+  chatInner.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    var art = btn.closest('.msg');
+    var bubble = art && art.querySelector('.bubble');
+    if (!bubble) return;
+    var act = btn.getAttribute('data-act');
+    if (act === 'copy') {
+      copyText(bubble.getAttribute('data-text') || bubble.textContent.trim(), btn);
+    } else if (act === 'regen' || act === 'retry') {
+      // 「重新生成」与失败态的「重试」是同一件事：丢弃这条回答，按原问题重跑
+      if (streaming) return;
+      var prevUser = art.previousElementSibling;
+      var prompt = prevUser && prevUser.querySelector('.bubble')
+        ? (prevUser.querySelector('.bubble').getAttribute('data-text') || '') : '';
+      art.remove();
+      if (!navigator.onLine) {
+        addErrorMessage('仍处于离线状态，无法连接诊断服务。请恢复网络后重试。');
+      } else {
+        streamAssistant(prompt);
+      }
+    }
+    // 注：'continue'（继续生成）由按钮自身的 click 监听处理，此处不介入
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     11. 主题切换
+     ══════════════════════════════════════════════════════════ */
+  var themeToggle = $('#themeToggle');
+  var sunIcon = $('.icon-sun'), moonIcon = $('.icon-moon');
+
+  function setTheme(name, persist) {
+    html.setAttribute('data-theme', name);
+    var dark = name === 'dark';
+    themeToggle.setAttribute('aria-pressed', String(dark));
+    themeToggle.setAttribute('aria-label', dark ? '切换到浅色主题' : '切换到深色主题');
+    sunIcon.hidden = dark;
+    moonIcon.hidden = !dark;
+    var meta = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (meta) meta.setAttribute('content', dark ? '#0B1220' : '#2559E0');
+    if (persist) { try { localStorage.setItem('georecall-theme', name); } catch (e) {} }
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('georecall-theme'); } catch (e) {}
+  setTheme(saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'), false);
+  themeToggle.addEventListener('click', function () {
+    setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true);
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     12. 移动端抽屉
+     ══════════════════════════════════════════════════════════ */
+  var rail = $('#rail');
+  var railToggle = $('#railToggle');
+  var backdrop = $('#railBackdrop');
+  var mqDrawer = window.matchMedia('(max-width: 1199px)');
+
+  function setRail(open) {
+    rail.setAttribute('data-open', String(open));
+    railToggle.setAttribute('aria-expanded', String(open));
+    railToggle.setAttribute('aria-label', open ? '关闭会话列表' : '打开会话列表');
+    if (open) {
+      backdrop.hidden = false;
+      requestAnimationFrame(function () { backdrop.setAttribute('data-open', 'true'); });
+      var first = rail.querySelector('.session, .btn');
+      if (first) first.focus();
+    } else {
+      backdrop.setAttribute('data-open', 'false');
+      setTimeout(function () { backdrop.hidden = true; }, 200);
+      if (mqDrawer.matches) railToggle.focus(); // 焦点归还触发者
+    }
+  }
+  railToggle.addEventListener('click', function () {
+    setRail(rail.getAttribute('data-open') !== 'true');
+  });
+  backdrop.addEventListener('click', function () { setRail(false); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    // 优先级：先关抽屉，再中断生成 —— 避免一次 Esc 同时触发两件事
+    if (rail.getAttribute('data-open') === 'true') { setRail(false); return; }
+    if (streaming && stopCurrentStream) stopCurrentStream();
+  });
+  mqDrawer.addEventListener('change', function (e) { if (!e.matches) setRail(false); });
+
+  /* ══════════════════════════════════════════════════════════
+     13. 会话切换
+     ══════════════════════════════════════════════════════════ */
+  $$('.session').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      $$('.session').forEach(function (b) { b.setAttribute('aria-current', 'false'); });
+      btn.setAttribute('aria-current', 'true');
+      var th = btn.getAttribute('data-thread');
+      $('.thread__title').textContent =
+        th === 'visibility' ? '品牌可见度复核 · 上九蒸馏所' :
+        th === 'correction' ? '纠偏工作台 · 产区描述有误' :
+        th === 'prompts'    ? '高意图问句库 · 生成与补齐' :
+        th === 'source'     ? '信源缺口 · 企业官网结构化数据' :
+                              '竞品推荐份额 · 大芹 / 崃州';
+      if (mqDrawer.matches) setRail(false);
+      // 报告抬头与会话标题保持同步（打印时标题即报告主题）
+      var printTopic = $('.print-head__topic');
+      if (printTopic) printTopic.textContent = $('.thread__title').textContent;
+      status.textContent = '已切换会话：' + $('.thread__title').textContent;
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     14. 新建对话 / 导出报告 / 复测
+     ══════════════════════════════════════════════════════════ */
+  $('#newChat').addEventListener('click', function () {
+    // 生成中开新对话：先中断，否则流式回调会继续往已被清空的列表里写内容
+    if (streaming && stopCurrentStream) stopCurrentStream();
+    if (streaming) endStreaming();
+    $$('.msg', chatInner).forEach(function (m) { m.remove(); });
+    var a = articleFor('assistant');
+    a.col.appendChild(whoLine('assistant'));
+    var b = document.createElement('div');
+    b.className = 'bubble';
+    b.innerHTML = '<div class="bubble__lead">新对话已开始。</div>' +
+      '<div class="bubble__body"><p>告诉我你想复核哪个品牌、哪些引擎，或者直接问「哪里说错了」。</p></div>';
+    a.col.appendChild(b);
+    chatInner.appendChild(a.art);
+    if (mqDrawer.matches) setRail(false);
+    input.focus();
+    status.textContent = '已开始新对话';
+  });
+
+  function exportReport() {
+    var lines = ['# GeoRecall 知荐 · 品牌可见度诊断报告', '',
+      '- 品牌：上九蒸馏所（云南昆明）',
+      '- 目标市场：中国大陆',
+      '- 数据截至：' + new Date().toLocaleString('zh-CN'),
+      '- 采集引擎：豆包 / 千问 / Kimi / DeepSeek（待配置）',
+      '- 启用问句：24 条（推荐 8 · 对比 6 · 场景 6 · 评价 4）', '',
+      '## 结论', '',
+      '豆包已主动推荐，推荐份额 68%；千问未进入候选池（0%）。',
+      '差异集中在推荐类问句，根因是企业官网缺少可抓取的结构化实体页。', '',
+      '## 引擎明细', '',
+      '| 引擎 | 推荐份额 | 提及次数 | 主要问题 |',
+      '| --- | --- | --- | --- |',
+      '| 豆包 | 68% | 16 | 产区描述有误，3 条回答引用不可信来源 |',
+      '| 千问 | 0% | 0 | 未进入候选池，缺少结构化信源 |',
+      '| Kimi | 42% | 4 | 描述准确，可继续沉淀长文 |',
+      '| DeepSeek | — | — | 待配置 API Key |', '',
+      '## 下一步动作', '',
+      '1. 在官网补齐 Organization / Product 结构化数据与 llms.txt',
+      '2. 对 2 条错误断言执行「取证 → 定位 → 覆盖 → 复测」',
+      '3. 7 天后用同批问句复测，比对推荐份额变化', '',
+      '---', '',
+      '由 GeoRecall 知荐生成 · 本报告数据来自平台采集，可逐条回溯来源。'];
+
+    var blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'GeoRecall-上九蒸馏所-可见度诊断-' + new Date().toISOString().slice(0, 10) + '.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    status.textContent = '诊断报告已导出';
+  }
+  $('#exportBtn').addEventListener('click', exportReport);
+
+  $('#recheckBtn').addEventListener('click', function () {
+    this.disabled = true;
+    var self = this;
+    self.textContent = '复测中…';
+    status.textContent = '正在复测 4 个引擎';
+    animateMetrics();
+    setTimeout(function () {
+      self.disabled = false;
+      self.textContent = '开始纠偏与复测';
+      status.textContent = '复测完成，分数已更新';
+      setScore(71);
+      $('#scoreNote').textContent = '复测完成：豆包保持稳定，千问仍为 0 —— 结构化数据尚未生效。';
+    }, 1400);
+  });
+
+  /* ══════════════════════════════════════════════════════════
+     15. 诊断面板动画与数值
+     ══════════════════════════════════════════════════════════ */
+  var RING_LEN = 2 * Math.PI * 40;
+  function setScoreArc(v) {
+    var arc = $('#scoreArc');
+    arc.setAttribute('stroke-dasharray', String(RING_LEN));
+    arc.setAttribute('stroke-dashoffset', String(RING_LEN * (1 - Math.max(0, Math.min(100, v)) / 100)));
+  }
+  /* 分数有「面板内」与「移动端折叠摘要」两处展示，必须走同一个入口，
+     否则复测后收起状态下的摘要会停留在旧分数。 */
+  function setScore(v) {
+    $('#scoreValue').textContent = String(v);
+    var sum = $('#summaryScore');
+    if (sum) sum.textContent = String(v);
+    setScoreArc(v);
+  }
+  function animateMetrics() {
+    $$('.bar__fill').forEach(function (f) {
+      var v = parseFloat(f.getAttribute('data-value')) || 0;
+      f.style.width = '0%';
+      requestAnimationFrame(function () {
+        setTimeout(function () { f.style.width = v + '%'; }, 40);
+      });
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     15b. 诊断面板折叠（仅 ≤899px 生效）
+     收起时只剩一行摘要，保证矮屏（如 320×700）上输入区必然可见；
+     展开状态在本次会话内记忆。桌面端强制展开 —— 否则会出现
+     「在手机上收起 → 拉宽到桌面 → 面板不见了且无法展开」。
+     ══════════════════════════════════════════════════════════ */
+  var insightsToggle = $('#insightsToggle');
+  var insightsBody = $('#insightsBody');
+  var mqMobile = window.matchMedia('(max-width: 899px)');
+  var insightsOpen = false;                 // 移动端默认收起
+  // 卡片在移动端可能内部纵向滚动，同样纳入键盘可达性管理
+  $$('#insightsBody > .card').forEach(function (c) {
+    c.setAttribute('data-scroll-region', '诊断卡片详情，可纵向滚动查看');
+  });
+
+  /* ── 可滚动区域的键盘可达性 ────────────────────────────────
+     axe-core 的 scrollable-region-focusable：只可滚动、不可聚焦的区域
+     键盘用户滚不动（WCAG 2.1.1）。移动端诊断条与其卡片都可能溢出，
+     因此这里按「实际是否溢出」动态赋予 tabindex ——
+     不溢出时就不加，避免在桌面端平白多出无意义的 tab 停靠点。 */
+  function syncScrollRegions() {
+    $$('[data-scroll-region]').forEach(function (el) {
+      var cs = getComputedStyle(el);
+      var invisible = cs.display === 'none' || cs.visibility === 'hidden' ||
+                      el.offsetParent === null;
+      var overflow = !invisible &&
+        (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1);
+
+      if (overflow) {
+        if (!el.hasAttribute('tabindex')) {
+          el.setAttribute('tabindex', '0');
+          el.setAttribute('role', 'group');
+          el.setAttribute('aria-label', el.getAttribute('data-scroll-region'));
+          el.setAttribute('data-scroll-managed', 'true');
+        }
+      } else if (el.getAttribute('data-scroll-managed') === 'true') {
+        // 不再溢出就撤回，保持 tab 顺序干净
+        el.removeAttribute('tabindex');
+        el.removeAttribute('role');
+        el.removeAttribute('aria-label');
+        el.removeAttribute('data-scroll-managed');
+      }
+    });
+  }
+
+  function applyInsights() {
+    var mobile = mqMobile.matches;
+    var open = mobile ? insightsOpen : true;  // 桌面端始终展开
+    insightsBody.hidden = !open;
+    insightsToggle.setAttribute('aria-expanded', String(open));
+    // 此前处于 display:none 时宽度动画不生效，展开后补跑一次
+    if (open) {
+      requestAnimationFrame(function () { setTimeout(animateMetrics, 60); });
+      syncScrollRegions();
+    }
+  }
+
+  insightsToggle.addEventListener('click', function () {
+    insightsOpen = !insightsOpen;
+    applyInsights();
+    status.textContent = insightsOpen ? '诊断面板已展开' : '诊断面板已收起';
+  });
+  mqMobile.addEventListener('change', applyInsights);
+
+  /* ══════════════════════════════════════════════════════════
+     16. 长会话压力测试（QA / 性能验证用）
+     用真实渲染路径批量灌入消息：不走流式（否则要逐字等待），
+     直接落地终稿。用途是让「长会话」这件事可复现、可测量 ——
+     见 tools/bench-long-chat.mjs。
+     ══════════════════════════════════════════════════════════ */
+  var SEED_PROMPTS = [
+    '帮我看下上九蒸馏所在豆包和千问里被提到了吗？',
+    'AI 把法定产区说错了，帮我走一遍纠偏流程',
+    '千问的信源缺口到底在哪里？',
+    '对比一下我们和大芹、崃州的 AI 推荐份额',
+    '生成一批海外市场的高意图问句，用英文提问'
+  ];
+
+  function seedConversation(pairs) {
+    pairs = Math.max(1, pairs | 0);
+    var t0 = performance.now();
+    var frag = document.createDocumentFragment();
+
+    for (var k = 0; k < pairs; k++) {
+      var p = SEED_PROMPTS[k % SEED_PROMPTS.length];
+      var reply = pickReply(p);
+
+      // —— 用户消息 ——
+      var u = articleFor('user');
+      u.col.appendChild(whoLine('user'));
+      var ub = document.createElement('div');
+      ub.className = 'bubble';
+      ub.setAttribute('data-text', p);
+      var ubody = document.createElement('div');
+      ubody.className = 'bubble__body';
+      var up = document.createElement('p');
+      up.textContent = p;
+      ubody.appendChild(up);
+      ub.appendChild(ubody);
+      u.col.appendChild(ub);
+      frag.appendChild(u.art);
+
+      // —— 助手回答（终稿形态）——
+      var a = articleFor('assistant');
+      a.col.appendChild(whoLine('assistant'));
+      var ab = document.createElement('div');
+      ab.className = 'bubble';
+      var lead = document.createElement('div');
+      lead.className = 'bubble__lead';
+      lead.textContent = reply.lead;
+      var body = document.createElement('div');
+      body.className = 'bubble__body';
+      reply.paras.forEach(function (t) {
+        var pp = document.createElement('p');
+        pp.innerHTML = inline(t);
+        body.appendChild(pp);
+      });
+      ab.append(lead, body);
+      if (reply.bullets) {
+        var ul = document.createElement('ul');
+        ul.className = 'bullets';
+        reply.bullets.forEach(function (t) {
+          var li = document.createElement('li');
+          li.innerHTML = inline(t);
+          ul.appendChild(li);
+        });
+        ab.appendChild(ul);
+      }
+      ab.setAttribute('data-text',
+        [reply.lead].concat(reply.paras, reply.bullets || []).join('\n').replace(/\*\*/g, ''));
+      a.col.appendChild(ab);
+      a.col.appendChild(actionsFor());
+      frag.appendChild(a.art);
+    }
+
+    chatInner.appendChild(frag);
+    var renderMs = performance.now() - t0;
+
+    var t1 = performance.now();
+    measureAllBubbles();
+    var measureMs = performance.now() - t1;
+
+    scrollToBottom(false);
+    updateBadge();
+    var out = {
+      pairs: pairs,
+      messages: pairs * 2,
+      renderMs: Math.round(renderMs),
+      measureMs: Math.round(measureMs)
+    };
+    status.textContent = '已灌入 ' + out.messages + ' 条消息用于性能验证';
+    return out;
+  }
+
+  /* ── 长会话降载 ────────────────────────────────────────────
+     实测（preview/bench-long-chat.json）：2000 条消息的高度图只需
+     3.9ms，真正的代价在 DOM 节点数（3.2 万个）与滚动绘制。
+     因此这里不做 JS 虚拟列表，而是交给浏览器的 content-visibility ——
+     屏幕外消息不布局不绘制，且不需要我们维护高度估算与锚点，
+     从根上避开了虚拟列表最容易出的滚动漂移。
+     用 MutationObserver 统一驱动，避免每处 append 都要记得调一次。 */
+  var LONG_CHAT_THRESHOLD = 60;
+
+  function syncLongChat() {
+    var n = chatInner.children.length;
+    var isLong = n > LONG_CHAT_THRESHOLD;
+    if (chatLog.classList.contains('chat-log--long') !== isLong) {
+      chatLog.classList.toggle('chat-log--long', isLong);
+    }
+  }
+
+  new MutationObserver(syncLongChat).observe(chatInner, { childList: true });
+
+  /* ══════════════════════════════════════════════════════════
+     17. 状态徽章（如实标注当前测量引擎与调用次数）
+     ══════════════════════════════════════════════════════════ */
+  function updateBadge() {
+    var s = Metrics.stats;
+    if (Metrics.engine === 'pretext') {
+      badgeDot.className = 'dot dot--on';
+      // 措辞刻意保守：被避免的是「为测文本而去读 DOM」这种会触发重排的做法
+      badgeTxt.innerHTML = 'Pretext <code>v0.0.9</code> · 纯计算文本测量 <code>' +
+        s.compute + '</code> 次 · DOM 测量 <code>0</code> 次';
+    } else {
+      badgeDot.className = 'dot dot--warn';
+      badgeTxt.innerHTML = 'DOM 回退测量 <code>' + s.dom + '</code> 次（未启用 Pretext）';
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     18. 初始化
+     ══════════════════════════════════════════════════════════ */
+  // 静态种子消息：补齐 data-text（供复制与紧贴宽度使用）
+  $$('.bubble').forEach(function (b) {
+    if (!b.hasAttribute('data-text')) {
+      var t = $$('.bubble__lead, .bubble__body p, .bullets li', b)
+        .map(function (n) { return n.textContent.trim(); })
+        .filter(Boolean).join('\n');
+      if (t) b.setAttribute('data-text', t);
+    }
+  });
+
+  autoGrow();
+  setScore(65);
+  applyInsights();          // 移动端默认收起；桌面端强制展开（展开时内部会补跑数值入场）
+  var printDate = $('#printDate');
+  if (printDate) printDate.textContent = new Date().toLocaleString('zh-CN');
+  measureAllBubbles();
+  syncScrollRegions();
+  updateBadge();
+
+  // 视口/字体变化后重算（Pretext 只是重跑廉价的 layout，不重新 prepare 也没有重排）
+  var rt = null;
+  var ro = new ResizeObserver(function () {
+    if (rt) cancelAnimationFrame(rt);
+    rt = requestAnimationFrame(function () {
+      cachedInputW = 0;              // 容器尺寸变了，输入框内容宽度缓存失效
+      measureAllBubbles();
+      autoGrow();
+      syncScrollRegions();
+    });
+  });
+  ro.observe(chatInner);
+  ro.observe($('.composer__inner'));
+
+  // 字体异步就绪后重算一次，避免用回退字体测出的宽度
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { measureAllBubbles(); autoGrow(); });
+  }
+
+  // 供人工/自动化验证使用的最小句柄（不参与业务逻辑）
+  window.__geoAssistant = {
+    metrics: Metrics,
+    engine: Metrics.engine,
+    font: SANS,
+    mono: MONO,
+    tokens: T,
+    autoGrow: autoGrow,
+    measureAllBubbles: measureAllBubbles,
+    scrollToBottom: scrollToBottom,
+    isStreaming: function () { return streaming; },
+    stopStream: function () { if (stopCurrentStream) stopCurrentStream(); },
+    seed: seedConversation
+  };
+})();
+</script>
+</body>
+</html>
