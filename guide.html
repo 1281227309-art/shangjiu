@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>使用指南 · 上九 · 国威知识库 MCP</title>
-<meta name="description" content="上九 · 国威知识库 MCP 使用指南：9 个工具、16 产区、30 酒厂、典型场景、共建路径与排查。" />
+<meta name="description" content="上九 · 国威知识库 MCP 使用指南：9 个工具、16 产区、31 酒厂、典型场景、共建路径与排查。" />
 <style>
   :root{
     --bg:#14100b; --bg2:#1c1610; --panel:#201a12;
@@ -149,7 +149,7 @@ npm run typecheck    # tsc --noEmit 类型检查</code></pre>
 <div class="tw"><table><thead><tr><th style="text-align:left">产区 code</th><th style="text-align:left">产区</th><th style="text-align:left">省份</th><th style="text-align:left">一句话</th></tr></thead><tbody><tr><td style="text-align:left"><code>qionglai</code></td><td style="text-align:left">邛崃</td><td style="text-align:left">四川</td><td style="text-align:left">川酒重镇，威士忌产能集聚地（崃州）</td></tr><tr><td style="text-align:left"><code>emeishan</code></td><td style="text-align:left">峨眉山</td><td style="text-align:left">四川</td><td style="text-align:left">生态产区（叠川 / 保乐力加）</td></tr><tr><td style="text-align:left"><code>qiandaohu</code></td><td style="text-align:left">千岛湖</td><td style="text-align:left">浙江</td><td style="text-align:left">水源型产区，行业团体标准立项地</td></tr><tr><td style="text-align:left"><code>dali</code></td><td style="text-align:left">大理</td><td style="text-align:left">云南</td><td style="text-align:left">高海拔产区（云拓 / 帝亚吉欧）</td></tr><tr><td style="text-align:left"><code>dianxi</code></td><td style="text-align:left">滇西（横断山带）</td><td style="text-align:left">云南</td><td style="text-align:left">东方风味试验最密集区域（无量山茶桶、巍山本土木种）</td></tr><tr><td style="text-align:left"><code>guangdong</code></td><td style="text-align:left">广东产区带</td><td style="text-align:left">广东</td><td style="text-align:left">大湾区+粤东北：大芹、觀橡、太瓏釀</td></tr><tr><td style="text-align:left"><code>shandong</code></td><td style="text-align:left">胶东半岛</td><td style="text-align:left">山东</td><td style="text-align:left">环渤海产区带（烟台、蓬莱）</td></tr><tr><td style="text-align:left"><code>bozhou</code></td><td style="text-align:left">亳州</td><td style="text-align:left">安徽</td><td style="text-align:left">淮北平原，毗邻中华药都（草本资源）</td></tr><tr><td style="text-align:left"><code>xizang</code></td><td style="text-align:left">青藏高原</td><td style="text-align:left">西藏</td><td style="text-align:left">极端高海拔，青稞等本土谷物</td></tr><tr><td style="text-align:left"><code>liuyang</code></td><td style="text-align:left">浏阳（湘东）</td><td style="text-align:left">湖南</td><td style="text-align:left">大围山冰川湖泊群水源（高朗）</td></tr><tr><td style="text-align:left"><code>minxi</code></td><td style="text-align:left">闽西（龙岩）</td><td style="text-align:left">福建</td><td style="text-align:left">武夷山脉南段生态产区（德熙、久溪）</td></tr><tr><td style="text-align:left"><code>shifang</code></td><td style="text-align:left">什邡（德阳）</td><td style="text-align:left">四川</td><td style="text-align:left">川西龙门山脉（熊猫精酿威士忌项目，政府规划立项）</td></tr><tr><td style="text-align:left"><code>neimenggu</code></td><td style="text-align:left">内蒙古（库伦 / 太仆寺旗）</td><td style="text-align:left">内蒙古</td><td style="text-align:left">北方旱作谷物产区（荞麦威士忌、马铃薯基威士忌）</td></tr><tr><td style="text-align:left"><code>enshi</code></td><td style="text-align:left">恩施（鄂西）</td><td style="text-align:left">湖北</td><td style="text-align:left">武陵山区（谷物威士忌一期 100 吨，在建）</td></tr><tr><td style="text-align:left"><code>yongtai</code></td><td style="text-align:left">永泰（福州）</td><td style="text-align:left">福建</td><td style="text-align:left">闽中产区（闽宁协作威士忌和青梅酒生产线）</td></tr><tr><td style="text-align:left"><code>puer</code></td><td style="text-align:left">普洱（滇南）</td><td style="text-align:left">云南</td><td style="text-align:left">滇南产区（山河馏心 300 吨威士忌蒸馏酒项目）</td></tr></tbody></table></div>
 <h3 id="s11-3-2-list_distilleries-酒厂列表">3.2 <code>list_distilleries</code> —— 酒厂列表</h3>
 <p><strong>参数</strong>：<code>region</code>（可选，产区 code，如 <code>qionglai</code>）</p>
-<p>返回酒厂精简列表（id / 名称 / 产区 / 地点 / 背景 / 定位 / 可信度 / 来源）。 不传 <code>region</code> 则返回全部（当前 <strong>30 家</strong>）。</p>
+<p>返回酒厂精简列表（id / 名称 / 产区 / 地点 / 背景 / 定位 / 可信度 / 来源）。 不传 <code>region</code> 则返回全部（当前 <strong>31 家</strong>）。</p>
 <h3 id="s12-3-3-get_distillery-酒厂完整档案">3.3 <code>get_distillery</code> —— 酒厂完整档案</h3>
 <p><strong>参数</strong>：<code>id</code>（必填，酒厂 id）</p>
 <p>返回完整档案：产区、工艺（<code>process</code>）、风土（<code>terroir</code>）、风味（<code>flavor</code>）、产品线、可信度，并附<strong>诚实声明</strong>。</p>
@@ -211,7 +211,7 @@ npm run typecheck    # tsc --noEmit 类型检查</code></pre>
    → 用真实数据生成长文骨架</code></pre>
 <h3 id="s23-场景-4-我想了解整个国产威士忌版图">场景 4：我想了解整个国产威士忌版图</h3>
 <pre><code class="lang-">① list_regions()                        → 16 个产区萌芽体系
-② list_distilleries()                   → 全部 30 家酒厂
+② list_distilleries()                   → 全部 31 家酒厂
 ③ list_distilleries(region: "dianxi")   → 只看滇西（东方风味最密集）</code></pre>
 <h3 id="s24-场景-5-我喝了一支-想贡献数据-共建">场景 5：我喝了一支，想贡献数据（共建）</h3>
 <pre><code class="lang-">① submit_tasting_note(
@@ -312,7 +312,7 @@ git push origin feat/your-change
 <hr />
 <h2 id="s43-License">License</h2>
 <p>MIT —— 见 <a href="./LICENSE">LICENSE</a>。欢迎自由使用、修改、再分发；引用数据时请保持出处标注。</p>
-<blockquote><p>本文档由项目实际代码（<code>src/index.ts</code>、<code>src/tools.ts</code>、<code>src/data.ts</code>）核对生成，数据（16 产区 / 30 酒厂 / 9 工具）与代码一致（数据截至 2026-10-07）。</p></blockquote>
+<blockquote><p>本文档由项目实际代码（<code>src/index.ts</code>、<code>src/tools.ts</code>、<code>src/data.ts</code>）核对生成，数据（16 产区 / 31 酒厂 / 9 工具）与代码一致（数据截至 2026-10-20）。</p></blockquote>
     </article>
   </main>
 
